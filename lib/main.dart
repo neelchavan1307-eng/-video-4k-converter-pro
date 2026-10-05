@@ -13,10 +13,7 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const HomePage(),
-    );
+    return MaterialApp(debugShowCheckedModeBanner: false, home: const HomePage());
   }
 }
 
@@ -45,38 +42,22 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> convertTo4K() async {
-    if (inputPath == null) {
-      setState(() => status = "Please select video first");
-      return;
-    }
-    setState(() {
-      isConverting = true;
-      status = "Converting to 4K...";
-    });
+    if (inputPath == null) { setState(() => status = "Please select video first"); return; }
+    setState(() { isConverting = true; status = "Converting to 4K..."; });
     final dir = await getExternalStorageDirectory();
     final outDir = Directory("${dir!.path}/4K_Videos");
     if (!await outDir.exists()) await outDir.create(recursive: true);
     final outPath = "${outDir.path}/4K_${DateTime.now().millisecondsSinceEpoch}.mp4";
     final command = "-i \"$inputPath\" -vf scale=3840:2160:flags=lanczos -c:v libx264 -preset ultrafast -crf 18 -c:a aac -b:a 192k \"$outPath\"";
-
     FFmpegKit.executeAsync(command, (session) async {
       final returnCode = await session.getReturnCode();
       if (ReturnCode.isSuccess(returnCode)) {
-        setState(() {
-          isConverting = false;
-          status = "Success! Saved to 4K_Videos";
-          outputPath = outPath;
-        });
+        setState(() { isConverting = false; status = "Success! Saved"; outputPath = outPath; });
       } else {
-        setState(() {
-          isConverting = false;
-          status = "Conversion Failed";
-        });
+        setState(() { isConverting = false; status = "Failed"; });
       }
     }, (log) {}, (Statistics stats) {
-      setState(() {
-        status = "Converting ${stats.getProgress()} percent";
-      });
+      setState(() { status = "Converting ${stats.getProgress()}%"; });
     });
   }
 
