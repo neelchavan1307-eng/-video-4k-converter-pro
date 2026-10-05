@@ -1,54 +1,25 @@
 name: Build Real 4K APK
-on: 
-  push:
-    branches: [ main ]
-
+on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-
       - uses: nttld/setup-ndk@v1
         with:
           ndk-version: r25b
           link-to-sdk: true
-
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.0'
-          channel: 'stable'
-
-      # हा Step सगळ्यात महत्वाचा - जुना Gradle Fix करेल
-      - name: Fix Gradle Project
-        run: |
-          rm -rf android
-          flutter create . --platforms=android --no-overwrite
-          flutter pub get
-
-      - name: Update build.gradle for FFmpeg
-        run: |
-          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 24/' android/app/build.gradle
-          sed -i 's/minSdk flutter.minSdkVersion/minSdk 24/' android/app/build.gradle
-          echo '    ndkVersion "25.1.8937393"' | cat - android/app/build.gradle > temp && mv temp android/app/build.gradle || true
-          grep -q "ndkVersion" android/app/build.gradle || sed -i '/^android {/a \    ndkVersion "25.1.8937393"' android/app/build.gradle
-
-      - name: Clean
-        run: flutter clean
-
-      - name: Get Packages
-        run: flutter pub get
-
-      - name: Build APK
-        run: flutter build apk --release
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - run: flutter clean
+      - run: flutter pub get
+      - run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
         with:
           name: Real-4K-APK
           path: build/app/outputs/flutter-apk/app-release.apk
