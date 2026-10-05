@@ -1,27 +1,44 @@
-name: Build 4K APK
-on: [push]
+name: Build Real 4K APK
+on: 
+  push:
+    branches: [ main ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-      - uses: subosito/flutter-action@v2
+
+      - name: Setup NDK
+        uses: nttld/setup-ndk@v1
         with:
-          flutter-version: '3.22.2'
-      - name: Fix Android Folder
-        run: |
-          mv lib/main.dart /tmp/main.dart
-          mv pubspec.yaml /tmp/pubspec.yaml
-          flutter create . --project-name video_4k_converter --platforms android
-          mv /tmp/main.dart lib/main.dart
-          mv /tmp/pubspec.yaml pubspec.yaml
-          flutter pub get
-      - run: flutter build apk --release
-      - uses: actions/upload-artifact@v4
+          ndk-version: r25b
+          link-to-sdk: true
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          name: 4K-Converter-Pro-APK
+          flutter-version: '3.22.0'
+          channel: 'stable'
+
+      - name: Clean
+        run: flutter clean
+
+      - name: Get Packages
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release --no-tree-shake-icons
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Real-4K-APK
           path: build/app/outputs/flutter-apk/app-release.apk
