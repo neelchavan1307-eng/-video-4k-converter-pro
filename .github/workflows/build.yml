@@ -1,4 +1,4 @@
-name: Build Real 4K APK
+name: build
 on: [push]
 jobs:
   build:
@@ -9,16 +9,17 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
-      - uses: nttld/setup-ndk@v1
-        with:
-          ndk-version: r25b
-          link-to-sdk: true
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.0'
-      - run: |
-          rm -rf android
-          flutter create . --project-name video_4k_converter_pro --platforms=android
+          flutter-version: '3.24.5'
+      - name: Fix
+        run: |
+          rm -f pubspec.lock
+          flutter clean
+          flutter create . --platforms android --project-name video_4k_converter_pro --overwrite
+          sed -i 's/flutter.minSdkVersion/24/g' android/app/build.gradle || true
+          sed -i 's/minSdkVersion 21/minSdkVersion 24/g' android/app/build.gradle || true
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 24/g' android/app/build.gradle || true
       - run: flutter pub get
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
