@@ -16,7 +16,7 @@ jobs:
         run: |
           mv lib/main.dart /tmp/main.dart
           mv pubspec.yaml /tmp/pubspec.yaml
-          flutter create. --project-name video_4k_converter --platforms android
+          flutter create . --project-name video_4k_converter --platforms android
           mv /tmp/main.dart lib/main.dart
           mv /tmp/pubspec.yaml pubspec.yaml
           flutter pub get
