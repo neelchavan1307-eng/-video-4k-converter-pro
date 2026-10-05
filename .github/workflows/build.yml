@@ -16,17 +16,9 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.0'
-
-      - name: Fix Old Gradle Project
-        run: |
+      - run: |
           rm -rf android
-          flutter create . --project-name video_4k_converter_pro --platforms=android
-
-      - name: Patch for FFmpeg
-        run: |
-          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 24/g' android/app/build.gradle
-          sed -i 's/minSdk flutter.minSdkVersion/minSdk 24/g' android/app/build.gradle
-
+          flutter create. --project-name video_4k_converter_pro --platforms=android
       - run: flutter pub get
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
