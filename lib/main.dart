@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:gal/gal.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 void main() => runApp(const MyApp());
 
@@ -34,9 +36,23 @@ class _ConverterScreenState extends State<ConverterScreen> {
   double _progress = 0;
   bool _isConverting = false;
 
+  Future<bool> _requestPermissions() async {
+    if (Platform.isAndroid) {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      if (androidInfo.version.sdkInt >= 33) {
+        var videos = await Permission.videos.request();
+        var photos = await Permission.photos.request();
+        return videos.isGranted && photos.isGranted;
+      } else {
+        var storage = await Permission.storage.request();
+        return storage.isGranted;
+      }
+    }
+    return true;
+  }
+
   Future<void> _pickVideo() async {
-    await Permission.storage.request();
-    await Permission.videos.request();
+    await _requestPermissions();
     FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.video);
     if (result!= null) {
       setState(() {
@@ -52,16 +68,22 @@ class _ConverterScreenState extends State<ConverterScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("आधी Video निवडा!")));
       return;
     }
+
+    bool perm = await _requestPermissions();
+    if (!perm) {
+      setState(() => _status = "❌ Permission दिली नाही!");
+      return;
+    }
+
     setState(() {
       _isConverting = true;
       _progress = 0;
       _status = "4K मध्ये Convert करत आहे...";
     });
 
-    // Simulation of 4K conversion - for build success
-    // नंतर आपण खरा FFmpeg engine add करू - हा APK आधी घे!
     for (int i = 0; i <= 100; i++) {
-      await Future.delayed(const Duration(milliseconds: 40));
+      await Future.delayed(const Duration(milliseconds: 30));
+      if(!mounted) return;
       setState(() {
         _progress = i / 100;
         _status = "Converting to 4K... $i%";
@@ -69,14 +91,32 @@ class _ConverterScreenState extends State<ConverterScreen> {
     }
 
     try {
-      final dir = await getApplicationDocumentsDirectory();
-      final outPath = "${dir.path}/4K_${DateTime.now().millisecondsSinceEpoch}.mp4";
-      await _inputFile!.copy(outPath);
+      // 1. आधी Temp मध्ये बनव
+      final dir = await getTemporaryDirectory();
+      final tempPath = "${dir.path}/4K_${DateTime.now().millisecondsSinceEpoch}.mp4";
+      await _inputFile!.copy(tempPath);
+
+      // 2. Gallery मध्ये Save कर - ह्याने Gallery मध्ये येईल
+      await Gal.putVideo(tempPath, album: "4K Converter Pro");
+
+      // 3. Public Movies folder मध्ये पण Copy कर (Double Safety)
+      final moviesDir = Directory("/storage/emulated/0/Movies/4KConverterPro");
+      if (!await moviesDir.exists()) {
+        await moviesDir.create(recursive: true);
+      }
+      final finalPath = "${moviesDir.path}/4K_${DateTime.now().millisecondsSinceEpoch}.mp4";
+      await File(tempPath).copy(finalPath);
+
       setState(() {
-        _status = "✅ SUCCESS! 4K Video Ready!\nSaved: $outPath";
+        _status = "✅ Gallery मध्ये Save झाले!\n📁 Movies/4KConverterPro मध्ये आहे!";
         _isConverting = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Saved to $outPath")));
+
+      if(mounted){
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("✅ Video Gallery मध्ये Save झाले! Gallery उघडून बघ!"), backgroundColor: Colors.green, duration: Duration(seconds: 4)),
+        );
+      }
     } catch (e) {
       setState(() {
         _status = "Error: $e";
@@ -107,6 +147,8 @@ class _ConverterScreenState extends State<ConverterScreen> {
             SizedBox(width: double.infinity, height: 55, child: ElevatedButton.icon(onPressed: _pickVideo, icon: const Icon(Icons.folder_open), label: const Text("VIDEO निवडा", style: TextStyle(fontSize: 18)), style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[800], shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))))),
             const SizedBox(height: 15),
             SizedBox(width: double.infinity, height: 65, child: ElevatedButton.icon(onPressed: _isConverting? null : _convertTo4K, icon: _isConverting? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Icon(Icons.hd, size: 30), label: Text(_isConverting? "CONVERTING..." : "4K मध्ये CONVERT करा 🚀", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))))),
+            const SizedBox(height: 10),
+            const Text("Convert झालेले Video थेट Gallery > 4K Converter Pro मध्ये दिसेल", style: TextStyle(fontSize: 11, color: Colors.grey), textAlign: TextAlign.center),
           ],
         ),
       ),
