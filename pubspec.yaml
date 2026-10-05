@@ -1,5 +1,5 @@
 name: video_4k_converter_pro
-description: Real 4K Converter - Lanczos Upscaling
+description: Real 4K Converter - Lanczos
 publish_to: 'none'
 version: 1.0.0+1
 environment:
