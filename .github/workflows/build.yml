@@ -18,7 +18,7 @@ jobs:
           flutter-version: '3.22.0'
       - run: |
           rm -rf android
-          flutter create . --project-name video_4k_converter_pro --platforms=android
+          flutter create. --project-name video_4k_converter_pro --platforms=android
       - run: flutter pub get
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
