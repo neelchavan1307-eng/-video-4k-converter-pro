@@ -20,7 +20,7 @@ jobs:
       - name: Fix Old Gradle Project
         run: |
           rm -rf android
-          flutter create. --project-name video_4k_converter_pro --platforms=android
+          flutter create . --project-name video_4k_converter_pro --platforms=android
 
       - name: Patch for FFmpeg
         run: |
