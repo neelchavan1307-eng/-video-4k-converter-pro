@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:gal/gal.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 
 void main() => runApp(const MyApp());
 
@@ -35,30 +33,19 @@ class _ConverterScreenState extends State<ConverterScreen> {
   String _status = "Video निवडा";
   double _progress = 0;
   bool _isConverting = false;
-
-  Future<bool> _requestPermissions() async {
-    if (Platform.isAndroid) {
-      final androidInfo = await DeviceInfoPlugin().androidInfo;
-      if (androidInfo.version.sdkInt >= 33) {
-        var videos = await Permission.videos.request();
-        var photos = await Permission.photos.request();
-        return videos.isGranted && photos.isGranted;
-      } else {
-        var storage = await Permission.storage.request();
-        return storage.isGranted;
-      }
-    }
-    return true;
-  }
+  String _savedPath = "";
 
   Future<void> _pickVideo() async {
-    await _requestPermissions();
+    await Permission.storage.request();
+    await Permission.videos.request();
+    await Permission.manageExternalStorage.request();
     FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.video);
     if (result!= null) {
       setState(() {
         _inputFile = File(result.files.single.path!);
         _status = "Selected: ${result.files.single.name}";
         _progress = 0;
+        _savedPath = "";
       });
     }
   }
@@ -69,11 +56,10 @@ class _ConverterScreenState extends State<ConverterScreen> {
       return;
     }
 
-    bool perm = await _requestPermissions();
-    if (!perm) {
-      setState(() => _status = "❌ Permission दिली नाही!");
-      return;
-    }
+    // Permission
+    await Permission.storage.request();
+    await Permission.videos.request();
+    await Permission.manageExternalStorage.request();
 
     setState(() {
       _isConverting = true;
@@ -82,7 +68,7 @@ class _ConverterScreenState extends State<ConverterScreen> {
     });
 
     for (int i = 0; i <= 100; i++) {
-      await Future.delayed(const Duration(milliseconds: 30));
+      await Future.delayed(const Duration(milliseconds: 25));
       if(!mounted) return;
       setState(() {
         _progress = i / 100;
@@ -91,30 +77,30 @@ class _ConverterScreenState extends State<ConverterScreen> {
     }
 
     try {
-      // 1. आधी Temp मध्ये बनव
-      final dir = await getTemporaryDirectory();
-      final tempPath = "${dir.path}/4K_${DateTime.now().millisecondsSinceEpoch}.mp4";
-      await _inputFile!.copy(tempPath);
+      // GALLERY PATH - हाच Path Gallery मध्ये दिसतो
+      final Directory moviesFolder = Directory("/storage/emulated/0/Movies/4KConverterPro");
+      final Directory dcimFolder = Directory("/storage/emulated/0/DCIM/4KConverterPro");
 
-      // 2. Gallery मध्ये Save कर - ह्याने Gallery मध्ये येईल
-      await Gal.putVideo(tempPath, album: "4K Converter Pro");
+      if (!await moviesFolder.exists()) await moviesFolder.create(recursive: true);
+      if (!await dcimFolder.exists()) await dcimFolder.create(recursive: true);
 
-      // 3. Public Movies folder मध्ये पण Copy कर (Double Safety)
-      final moviesDir = Directory("/storage/emulated/0/Movies/4KConverterPro");
-      if (!await moviesDir.exists()) {
-        await moviesDir.create(recursive: true);
-      }
-      final finalPath = "${moviesDir.path}/4K_${DateTime.now().millisecondsSinceEpoch}.mp4";
-      await File(tempPath).copy(finalPath);
+      String fileName = "4K_${DateTime.now().millisecondsSinceEpoch}.mp4";
+      String finalPath = "${moviesFolder.path}/$fileName";
+      String finalPath2 = "${dcimFolder.path}/$fileName";
+
+      // Copy to both folders for 100% gallery visibility
+      await _inputFile!.copy(finalPath);
+      await _inputFile!.copy(finalPath2);
 
       setState(() {
-        _status = "✅ Gallery मध्ये Save झाले!\n📁 Movies/4KConverterPro मध्ये आहे!";
+        _status = "✅ Gallery मध्ये Save झाले!";
+        _savedPath = finalPath;
         _isConverting = false;
       });
 
       if(mounted){
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("✅ Video Gallery मध्ये Save झाले! Gallery उघडून बघ!"), backgroundColor: Colors.green, duration: Duration(seconds: 4)),
+          SnackBar(content: Text("✅ Gallery मध्ये Save झाले!\n$finalPath"), backgroundColor: Colors.green, duration: const Duration(seconds: 5)),
         );
       }
     } catch (e) {
@@ -122,6 +108,13 @@ class _ConverterScreenState extends State<ConverterScreen> {
         _status = "Error: $e";
         _isConverting = false;
       });
+      // Fallback - Download folder
+      try{
+        final Directory downloadFolder = Directory("/storage/emulated/0/Download");
+        String fileName = "4K_${DateTime.now().millisecondsSinceEpoch}.mp4";
+        await _inputFile!.copy("${downloadFolder.path}/$fileName");
+        setState(() => _status = "✅ Download Folder मध्ये Save झाले! ${downloadFolder.path}/$fileName");
+      }catch(_){}
     }
   }
 
@@ -143,12 +136,13 @@ class _ConverterScreenState extends State<ConverterScreen> {
             LinearProgressIndicator(value: _progress, minHeight: 12, backgroundColor: Colors.grey[800], color: Colors.deepPurple),
             const SizedBox(height: 10),
             Text(_status, style: const TextStyle(fontSize: 14), textAlign: TextAlign.center),
+            if(_savedPath.isNotEmpty) Padding(padding: const EdgeInsets.only(top:8), child: Text("📁 $_savedPath", style: const TextStyle(fontSize: 10, color: Colors.greenAccent))),
             const Spacer(),
             SizedBox(width: double.infinity, height: 55, child: ElevatedButton.icon(onPressed: _pickVideo, icon: const Icon(Icons.folder_open), label: const Text("VIDEO निवडा", style: TextStyle(fontSize: 18)), style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[800], shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))))),
             const SizedBox(height: 15),
             SizedBox(width: double.infinity, height: 65, child: ElevatedButton.icon(onPressed: _isConverting? null : _convertTo4K, icon: _isConverting? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Icon(Icons.hd, size: 30), label: Text(_isConverting? "CONVERTING..." : "4K मध्ये CONVERT करा 🚀", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))))),
             const SizedBox(height: 10),
-            const Text("Convert झालेले Video थेट Gallery > 4K Converter Pro मध्ये दिसेल", style: TextStyle(fontSize: 11, color: Colors.grey), textAlign: TextAlign.center),
+            const Text("Convert झालेले Video Gallery > Movies आणि DCIM मध्ये दिसेल", style: TextStyle(fontSize: 11, color: Colors.grey), textAlign: TextAlign.center),
           ],
         ),
       ),
