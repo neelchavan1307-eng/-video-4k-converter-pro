@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_new/ffprobe_kit.dart';
+import 'package:ffmpeg_kit_flutter_new_min_gpl/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new_min_gpl/ffprobe_kit.dart';
 import 'package:video_player/video_player.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -49,7 +49,6 @@ class _ConverterAppState extends State<ConverterApp> {
       String target = qualityMap[selectedQuality]!;
       String outputPath = "${dir.path}/CLEAR_${selectedQuality}_${DateTime.now().millisecondsSinceEpoch}_$done.mp4";
 
-      // SIMPLEST + CLEAR FILTER - 100% WORKING
       String clearFilter = "scale=$target:flags=bicubic:force_original_aspect_ratio=increase,crop=$target,setsar=1,unsharp=5:5:0.8:3:3:0.4";
 
       String command = "-y -i \"$inputPath\" -vf \"$clearFilter\" -c:v libx264 -preset ultrafast -crf 20 -c:a aac \"$outputPath\"";
@@ -64,7 +63,7 @@ class _ConverterAppState extends State<ConverterApp> {
         convertedFiles.add(outputPath);
         setState(() => logText = "Success");
       } else {
-        setState(() { logText = logs ?? "Failed"; status = "Failed, see log"; });
+        setState(() { logText = logs ?? "Failed"; status = "Failed - see log"; });
         break;
       }
       done++;
@@ -78,7 +77,7 @@ class _ConverterAppState extends State<ConverterApp> {
       setState(() {
         controller = c;
         isConverting = false;
-        status = "Done! Saved in App Folder";
+        status = "Done! Saved";
         progress = 1;
       });
     } else {
@@ -96,10 +95,9 @@ class _ConverterAppState extends State<ConverterApp> {
         Text("Trim: ${trimRange.start.toInt()}% - ${trimRange.end.toInt()}%"),
         RangeSlider(values: trimRange, onChanged: (v)=> setState(()=> trimRange=v), min: 0, max: 100),
         if(controller!=null && controller!.value.isInitialized)
-          Container(height: 220, child: VideoPlayer(controller!)),
+          Container(height: 220, child: AspectRatio(aspectRatio: controller!.value.aspectRatio, child: VideoPlayer(controller!))),
         if(isConverting) LinearProgressIndicator(value: progress),
         Text(status, style: TextStyle(fontWeight: FontWeight.bold)),
-        SizedBox(height: 10),
         Text(logText, style: TextStyle(fontSize: 10, color: Colors.red)),
         ElevatedButton(onPressed: isConverting || inputFiles.isEmpty ? null : convertAll, style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple, foregroundColor: Colors.white, minimumSize: Size(double.infinity, 50)), child: Text("CONVERT NOW")),
         for(var f in convertedFiles) ListTile(title: Text(f.split("/").last, style: TextStyle(fontSize: 11)), trailing: IconButton(icon: Icon(Icons.share), onPressed: () => Share.shareXFiles([XFile(f)]))),
