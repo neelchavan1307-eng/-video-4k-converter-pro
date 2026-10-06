@@ -1,7 +1,24 @@
+name: video_4k_converter_pro
+description: Real 4K Video Converter Pro
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+
 dependencies:
   flutter:
     sdk: flutter
+  cupertino_icons: ^1.0.6
   file_picker: ^8.0.0
   ffmpeg_kit_flutter_new: ^4.6.7
   video_player: ^2.8.2
   share_plus: ^7.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
