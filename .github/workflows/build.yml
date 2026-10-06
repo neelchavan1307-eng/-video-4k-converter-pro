@@ -17,7 +17,7 @@ jobs:
           cp lib/main.dart /tmp/main.dart
           rm -f pubspec.lock
           flutter clean
-          flutter create. --platforms android --project-name video_4k_converter_pro
+          flutter create . --platforms android --project-name video_4k_converter_pro
           cp /tmp/main.dart lib/main.dart
           sed -i 's/compileSdk 34/compileSdk 35/g' android/app/build.gradle
           sed -i 's/compileSdkVersion 34/compileSdkVersion 35/g' android/app/build.gradle
