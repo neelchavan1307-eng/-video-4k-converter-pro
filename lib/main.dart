@@ -26,24 +26,37 @@ class _ConverterAppState extends State<ConverterApp> {
     if (inputPath == null) return;
 
     final info = await FFprobeKit.getMediaInformation(inputPath);
-    videoDuration = (double.tryParse(info.getMediaInformation()?.getDuration() ?? "0") ?? 0).toInt() * 1000;
+    final mediaInfo = info.getMediaInformation();
+    videoDuration = (double.tryParse(mediaInfo?.getDuration() ?? "0") ?? 0).toInt() * 1000;
+    
+    // Width Height काढून Portrait/Landscape ओळखणे
+    final streams = mediaInfo?.getStreams();
+    int width = 1920; int height = 1080;
+    if (streams != null && streams.isNotEmpty) {
+      width = streams.first.getWidth() ?? 1920;
+      height = streams.first.getHeight() ?? 1080;
+    }
+    bool isPortrait = height > width;
+    String targetRes = isPortrait ? "2160:3840" : "3840:2160";
 
-    setState(() { isConverting = true; progress = 0; status = "Real 4K मध्ये Convert होत आहे..."; });
+    setState(() { isConverting = true; progress = 0; status = "Full Screen 4K मध्ये Convert होत आहे..."; });
 
     await Directory("/storage/emulated/0/Movies").create(recursive: true);
-    String outputPath = "/storage/emulated/0/Movies/4K_${DateTime.now().millisecondsSinceEpoch}.mp4";
-    String command = "-i \"$inputPath\" -vf scale=3840:2160 -c:v libx264 -profile:v baseline -level 4.0 -pix_fmt yuv420p -preset ultrafast -crf 23 -c:a aac -movflags +faststart \"$outputPath\"";
+    String outputPath = "/storage/emulated/0/Movies/4K_FULL_${DateTime.now().millisecondsSinceEpoch}.mp4";
+
+    // FULL SCREEN FIX: aspect ratio keep करून black border नाही, पूर्ण stretch
+    String command = "-i \"$inputPath\" -vf scale=$targetRes:flags=lanczos,setsar=1 -c:v libx264 -profile:v high -pix_fmt yuv420p -preset ultrafast -crf 22 -c:a aac -movflags +faststart \"$outputPath\"";
 
     await FFmpegKit.executeAsync(command, (session) async {
       final code = await session.getReturnCode();
       setState(() {
         isConverting = false;
         progress = ReturnCode.isSuccess(code) ? 100 : 0;
-        status = ReturnCode.isSuccess(code) ? "Success! Gallery मध्ये चालेल" : "Failed";
+        status = ReturnCode.isSuccess(code) ? "Success! आता Full Screen 4K दिसेल" : "Failed";
       });
-    }, (Log log) {}, (Statistics stats) {
+    }, (Log log) {}, (Statistics s) {
       if (videoDuration > 0) {
-        setState(() => progress = (stats.getTime() / videoDuration * 100).clamp(0, 100).toDouble());
+        setState(() => progress = (s.getTime() / videoDuration * 100).clamp(0, 100).toDouble());
       }
     });
   }
