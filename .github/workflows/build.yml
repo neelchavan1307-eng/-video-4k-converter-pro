@@ -15,6 +15,11 @@ jobs:
           channel: 'stable'
       - run: rm -rf android
       - run: flutter create . --platforms=android --project-name video_4k_converter_pro
+      - run: |
+          sed -i 's/minSdkVersion 21/minSdkVersion 24/g' android/app/build.gradle
+          sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 24/g' android/app/build.gradle
+          sed -i 's/minSdk flutter.minSdkVersion/minSdk 24/g' android/app/build.gradle
+          sed -i 's/flutter.minSdkVersion=21/flutter.minSdkVersion=24/g' android/local.properties || true
       - run: flutter pub get
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
