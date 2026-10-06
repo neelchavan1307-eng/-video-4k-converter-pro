@@ -22,10 +22,8 @@ class _ConverterAppState extends State<ConverterApp> {
 
     setState(() { isConverting = true; status = "Real 4K मध्ये Convert होत आहे...\nथोडा वेळ लागेल"; });
 
-    // Public Movies folder - जिथून Player प्ले करू शकेल
     String outputPath = "/storage/emulated/0/Movies/4K_${DateTime.now().millisecondsSinceEpoch}.mp4";
     
-    // yuv420p लावलंय - त्यामुळे सगळ्या Player वर चालेल
     String command = "-i \"$inputPath\" -vf scale=3840:2160 -c:v libx264 -pix_fmt yuv420p -preset ultrafast -crf 23 -c:a aac -movflags +faststart \"$outputPath\"";
     
     await FFmpegKit.execute(command).then((session) async {
@@ -33,9 +31,9 @@ class _ConverterAppState extends State<ConverterApp> {
       setState(() {
         isConverting = false;
         if (ReturnCode.isSuccess(code)) {
-          status = "✅ Success! 193 MB -> Real 4K झाला!\nSaved in: Movies Folder\n$file: $outputPath";
+          status = "Success! Real 4K झाला!\nSaved in Movies folder\n$outputPath";
         } else {
-          status = "❌ Failed: $code";
+          status = "Failed: $code";
         }
       });
     });
