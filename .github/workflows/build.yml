@@ -11,22 +11,11 @@ jobs:
           java-version: '17'
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.5'
-      - name: Fix
-        run: |
-          cp lib/main.dart /tmp/main.dart
-          rm -f pubspec.lock
-          flutter clean
-          flutter create . --platforms android --project-name video_4k_converter_pro
-          cp /tmp/main.dart lib/main.dart
-          sed -i 's/compileSdk 34/compileSdk 35/g' android/app/build.gradle
-          sed -i 's/compileSdkVersion 34/compileSdkVersion 35/g' android/app/build.gradle
-          sed -i 's/compileSdk = 34/compileSdk = 35/g' android/local.properties || true
-          sed -i 's/flutter.minSdkVersion/24/g' android/app/build.gradle || true
-          sed -i 's/minSdkVersion 21/minSdkVersion 24/g' android/app/build.gradle || true
+          flutter-version: '3.22.0'
+          channel: 'stable'
       - run: flutter pub get
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
-          name: Real-4K-APK
+          name: release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
