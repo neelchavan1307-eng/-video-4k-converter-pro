@@ -34,8 +34,14 @@ class _ConverterAppState extends State<ConverterApp> {
     if (inputFiles.isNotEmpty) {
       final info = await FFprobeKit.getMediaInformation(inputFiles.first);
       totalDurationMs = (double.tryParse(info.getMediaInformation()?.getDuration()?? "0")?? 0).toInt() * 1000;
-      controller = VideoPlayerController.file(File(inputFiles.first))..initialize().then((_)=> setState((){}));
-      setState(() { status = "${inputFiles.length} Video निवडले | Trim करा आणि Quality निवडा"; trimRange = RangeValues(0, 100); });
+
+      var c = VideoPlayerController.file(File(inputFiles.first));
+      await c.initialize();
+      setState(() {
+        controller = c;
+        status = "${inputFiles.length} Video निवडले";
+        trimRange = RangeValues(0, 100);
+      });
     }
   }
 
@@ -43,7 +49,8 @@ class _ConverterAppState extends State<ConverterApp> {
     String base = qualityMap[selectedQuality]!;
     bool isPortrait = h > w;
     if (isPortrait) {
-      var parts = base.split(":"); return "${parts[1]}:${parts[0]}";
+      var parts = base.split(":");
+      return "${parts[1]}:${parts[0]}";
     }
     return base;
   }
@@ -67,20 +74,24 @@ class _ConverterAppState extends State<ConverterApp> {
       String outputPath = "/storage/emulated/0/Movies/${selectedQuality}_${DateTime.now().millisecondsSinceEpoch}_$done.mp4";
       await Directory("/storage/emulated/0/Movies").create(recursive: true);
 
-      String trimCmd = trimRange.start > 0 || trimRange.end < 100? "-ss $startSec -to $endSec" : "";
-      String command = "-y $trimCmd -i \"$inputPath\" -vf \"scale=$target:force_original_aspect_ratio=increase,crop=$target,setsar=1\" -c:v libx264 -profile:v high -pix_fmt yuv420p -preset ultrafast -crf 20 -c:a aac -movflags +faststart \"$outputPath\"";
+      String trimCmd = (trimRange.start > 0 || trimRange.end < 100)? "-ss $startSec -to $endSec" : "";
+      String command = "-y $trimCmd -i \"$inputPath\" -vf \"scale=$target:force_original_aspect_ratio=increase,crop=$target,setsar=1\" -c:v libx264 -pix_fmt yuv420p -preset ultrafast -crf 20 -c:a aac -movflags +faststart \"$outputPath\"";
 
-      await FFmpegKit.executeAsync(command, (session) async {
-        final code = await session.getReturnCode();
-        if (ReturnCode.isSuccess(code)) {
-          convertedFiles.add(outputPath);
-          controller = VideoPlayerController.file(File(outputPath))..initialize().then((_)=> setState((){}));
-        }
-      }, (Log l){}, (Statistics s){
-        if(fileDuration>0) setState(()=> progress = ((done + s.getTime()/fileDuration) / inputFiles.length * 100).clamp(0,100).toDouble());
-      }).then((_) => done++);
+      await FFmpegKit.execute(command);
+      convertedFiles.add(outputPath);
+      done++;
+      setState(() => progress = (done / inputFiles.length * 100));
     }
-    setState(() { isConverting = false; status = "Success! ${convertedFiles.length} Video ${selectedQuality} मध्ये झाले"; progress = 100; });
+
+    var c = VideoPlayerController.file(File(convertedFiles.last));
+    await c.initialize();
+    await c.play();
+    setState(() {
+      controller = c;
+      isConverting = false;
+      status = "Success! ${convertedFiles.length} Video $selectedQuality मध्ये झाले";
+      progress = 100;
+    });
   }
 
   @override
@@ -89,37 +100,31 @@ class _ConverterAppState extends State<ConverterApp> {
       backgroundColor: isConverting? Color(0xFF020B1E) : Colors.white,
       appBar: AppBar(title: Text("4K Pro - 5 Features"), backgroundColor: Colors.deepPurple),
       body: SingleChildScrollView(padding: EdgeInsets.all(16), child: Column(children: [
-        // 1. Quality Select
-        Row(children: ["4K","2K","1080p"].map((q) => Expanded(child: Padding(padding: EdgeInsets.all(4), child: ChoiceChip(label: Text(q), selected: selectedQuality==q, onSelected: (v){ if(v) setState(()=> selectedQuality=q); } )))).toList()),
+        Row(children: ["4K","2K","1080p"].map((q) => Expanded(child: Padding(padding: EdgeInsets.all(4), child: ChoiceChip(label: Text(q), selected: selectedQuality==q, onSelected: (v){ if(v) setState(()=> selectedQuality=q); })))).toList()),
         SizedBox(height: 10),
-        ElevatedButton(onPressed: pickVideos, child: Text("1. SELECT VIDEOS (Batch)")),
+        ElevatedButton(onPressed: pickVideos, child: Text("SELECT VIDEOS (Batch)")),
         if(totalDurationMs>0)...[
           SizedBox(height: 15),
-          Text("2. Trimmer: ${trimRange.start.toInt()}% - ${trimRange.end.toInt()}%"),
+          Text("Trimmer: ${trimRange.start.toInt()}% - ${trimRange.end.toInt()}%"),
           RangeSlider(values: trimRange, onChanged: (v)=> setState(()=> trimRange=v), min: 0, max: 100, divisions: 100),
         ],
         if(controller!=null && controller!.value.isInitialized)
-          Container(height: 200, child: AspectRatio(aspectRatio: controller!.value.aspectRatio, child: VideoPlayer(controller!))),
+          Container(height: 220, child: AspectRatio(aspectRatio: controller!.value.aspectRatio, child: VideoPlayer(controller!))),
         SizedBox(height: 15),
         if(isConverting)...[
-          Container(width: double.infinity, height: 28, decoration: BoxDecoration(border: Border.all(color: Colors.cyanAccent, width: 2), borderRadius: BorderRadius.circular(20), color: Color(0xFF0A1931)), child: ClipRRect(borderRadius: BorderRadius.circular(20), child: Align(alignment: Alignment.centerLeft, child: FractionallySizedBox(widthFactor: progress/100, child: Container(decoration: BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF1E3A8A), Color(0xFF00FFFF)]))))))),
+          LinearProgressIndicator(value: progress/100),
           SizedBox(height: 8),
-          Text("LOADING... ${progress.toInt()}% - ${status}", style: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold)),
+          Text("LOADING... ${progress.toInt()}%", style: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold)),
         ],
         if(!isConverting) Text(status, style: TextStyle(fontWeight: FontWeight.bold)),
         SizedBox(height: 15),
         ElevatedButton(onPressed: isConverting || inputFiles.isEmpty? null : convertAll, style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple, foregroundColor: Colors.white, minimumSize: Size(double.infinity, 50)), child: Text("CONVERT TO $selectedQuality")),
         SizedBox(height: 20),
-        // 3. Before/After + 5. Share
-        if(convertedFiles.isNotEmpty)...[
-          Divider(),
-          Text("3. Before/After Preview & 5. Share", style: TextStyle(fontWeight: FontWeight.bold)),
+        if(convertedFiles.isNotEmpty)
          ...convertedFiles.map((f) => ListTile(
             title: Text(f.split("/").last, style: TextStyle(fontSize: 12)),
-            trailing: IconButton(icon: Icon(Icons.share), onPressed: () => Share.shareXFiles([XFile(f)], text: "My $selectedQuality Video")),
-            onTap: () { setState(()=> controller = VideoPlayerController.file(File(f))..initialize().then((_)=> setState((){})..play())); },
+            trailing: IconButton(icon: Icon(Icons.share), onPressed: () => Share.shareXFiles([XFile(f)])),
           )),
-        ]
       ])),
     );
   }
