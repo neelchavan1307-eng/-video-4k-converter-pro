@@ -4,16 +4,17 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.5.0 <4.0.0'
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
-  path_provider: ^2.1.1
+  flutter:
     sdk: flutter
   cupertino_icons: ^1.0.6
   file_picker: ^8.0.0
-  ffmpeg_kit_flutter_new: ^4.6.7
+  ffmpeg_kit_flutter_new: ^1.0.0
   video_player: ^2.8.2
   share_plus: ^7.2.1
+  path_provider: ^2.1.1
 
 dev_dependencies:
   flutter_test:
