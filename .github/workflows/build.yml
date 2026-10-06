@@ -14,9 +14,11 @@ jobs:
           flutter-version: '3.24.5'
       - name: Fix
         run: |
+          cp lib/main.dart /tmp/main.dart
           rm -f pubspec.lock
           flutter clean
-          flutter create . --platforms android --project-name video_4k_converter_pro --overwrite
+          flutter create. --platforms android --project-name video_4k_converter_pro
+          cp /tmp/main.dart lib/main.dart
           sed -i 's/flutter.minSdkVersion/24/g' android/app/build.gradle || true
           sed -i 's/minSdkVersion 21/minSdkVersion 24/g' android/app/build.gradle || true
           sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 24/g' android/app/build.gradle || true
