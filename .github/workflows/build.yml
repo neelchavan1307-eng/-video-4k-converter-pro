@@ -11,21 +11,27 @@ jobs:
           java-version: '17'
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.0'
+          flutter-version: '3.27.4'
           channel: 'stable'
       - run: rm -rf android
       - run: flutter create . --platforms=android --project-name video_4k_converter_pro
       - run: |
-          sed -i "s/minSdkVersion 21/minSdkVersion 24/g" android/app/build.gradle
-          sed -i "s/minSdk = flutter.minSdkVersion/minSdk = 24/g" android/app/build.gradle
-          sed -i "s/minSdk flutter.minSdkVersion/minSdk 24/g" android/app/build.gradle
-          sed -i "s/ext.kotlin_version = '1.7.10'/ext.kotlin_version = '1.9.22'/g" android/build.gradle
-          sed -i "s/ext.kotlin_version = '1.7.1'/ext.kotlin_version = '1.9.22'/g" android/build.gradle
-          sed -i "s/kotlin_version = '1.7.10'/kotlin_version = '1.9.22'/g" android/build.gradle
-          sed -i "s/id \"org.jetbrains.kotlin.android\" version \"1.7.10\"/id \"org.jetbrains.kotlin.android\" version \"1.9.22\"/g" android/settings.gradle
-          sed -i "s/id 'org.jetbrains.kotlin.android' version '1.7.10'/id 'org.jetbrains.kotlin.android' version '1.9.22'/g" android/settings.gradle
+          sed -i 's/compileSdkVersion 35/compileSdkVersion 34/g' android/app/build.gradle
+          sed -i 's/compileSdk 35/compileSdk 34/g' android/app/build.gradle
+          sed -i 's/minSdk.*/minSdk = 24/' android/app/build.gradle
+          sed -i 's/targetSdkVersion 35/targetSdkVersion 34/g' android/app/build.gradle
+          sed -i 's/targetSdk 35/targetSdk 34/g' android/app/build.gradle
+          sed -i 's/flutter.minSdkVersion=21/flutter.minSdkVersion=24/g' android/local.properties || true
+          sed -i "s/1.7.10/2.1.0/g" android/build.gradle
+          sed -i "s/1.9.10/2.1.0/g" android/build.gradle
+          sed -i "s/1.9.22/2.1.0/g" android/build.gradle
+          sed -i "s/1.7.10/2.1.0/g" android/settings.gradle
+          sed -i "s/1.9.10/2.1.0/g" android/settings.gradle
+          sed -i "s/1.9.22/2.1.0/g" android/settings.gradle
+          cat android/app/build.gradle
+      - run: flutter clean
       - run: flutter pub get
-      - run: flutter build apk --release
+      - run: flutter build apk --release --no-tree-shake-icons
       - uses: actions/upload-artifact@v4
         with:
           name: release-apk
