@@ -1,5 +1,5 @@
 name: video_4k_converter_pro
-description: 4K Clear Pro - Real FFmpeg
+description: 4K Clear Pro - Real FFmpeg - All Settings from Video
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -14,7 +14,7 @@ dependencies:
   video_player: ^2.8.2
   path_provider: ^2.1.2
   permission_handler: ^11.3.1
-  ffmpeg_kit_flutter_new_min_gpl: ^6.0.1
+  ffmpeg_kit_flutter_new_min_gpl: ^2.6.7
 
 flutter:
   uses-material-design: true
