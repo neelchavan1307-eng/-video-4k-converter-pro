@@ -28,36 +28,34 @@ class _ConverterAppState extends State<ConverterApp> {
     final info = await FFprobeKit.getMediaInformation(inputPath);
     final mediaInfo = info.getMediaInformation();
     videoDuration = (double.tryParse(mediaInfo?.getDuration() ?? "0") ?? 0).toInt() * 1000;
-    
-    // Width Height काढून Portrait/Landscape ओळखणे
-    final streams = mediaInfo?.getStreams();
-    int width = 1920; int height = 1080;
-    if (streams != null && streams.isNotEmpty) {
-      width = streams.first.getWidth() ?? 1920;
-      height = streams.first.getHeight() ?? 1080;
-    }
-    bool isPortrait = height > width;
-    String targetRes = isPortrait ? "2160:3840" : "3840:2160";
 
-    setState(() { isConverting = true; progress = 0; status = "Full Screen 4K मध्ये Convert होत आहे..."; });
+    int width = 720; int height = 1280;
+    try {
+      width = mediaInfo?.getStreams().first.getWidth() ?? 720;
+      height = mediaInfo?.getStreams().first.getHeight() ?? 1280;
+    } catch(e){}
+
+    bool isPortrait = height > width;
+    // Real Video हा Portrait आहे म्हणून 2160x3840
+    String target = isPortrait ? "2160:3840" : "3840:2160";
+
+    setState(() { isConverting = true; progress = 0; status = "Real सारखा Full 4K होत आहे..."; });
 
     await Directory("/storage/emulated/0/Movies").create(recursive: true);
-    String outputPath = "/storage/emulated/0/Movies/4K_FULL_${DateTime.now().millisecondsSinceEpoch}.mp4";
+    String outputPath = "/storage/emulated/0/Movies/REAL_4K_${DateTime.now().millisecondsSinceEpoch}.mp4";
 
-    // FULL SCREEN FIX: aspect ratio keep करून black border नाही, पूर्ण stretch
-    String command = "-i \"$inputPath\" -vf scale=$targetRes:flags=lanczos,setsar=1 -c:v libx264 -profile:v high -pix_fmt yuv420p -preset ultrafast -crf 22 -c:a aac -movflags +faststart \"$outputPath\"";
+    // दाबणार नाही, Real shape राहील
+    String command = "-noautorotate -i \"$inputPath\" -vf \"scale=$target:force_original_aspect_ratio=increase,crop=$target:(iw-ow)/2:(ih-oh)/2,setsar=1\" -c:v libx264 -profile:v high -pix_fmt yuv420p -preset ultrafast -crf 20 -c:a copy -movflags +faststart \"$outputPath\"";
 
     await FFmpegKit.executeAsync(command, (session) async {
       final code = await session.getReturnCode();
       setState(() {
         isConverting = false;
+        status = ReturnCode.isSuccess(code) ? "Success! Real सारखा Full Screen 4K" : "Failed";
         progress = ReturnCode.isSuccess(code) ? 100 : 0;
-        status = ReturnCode.isSuccess(code) ? "Success! आता Full Screen 4K दिसेल" : "Failed";
       });
-    }, (Log log) {}, (Statistics s) {
-      if (videoDuration > 0) {
-        setState(() => progress = (s.getTime() / videoDuration * 100).clamp(0, 100).toDouble());
-      }
+    }, (Log l){}, (Statistics s){
+      if(videoDuration>0) setState(()=> progress = (s.getTime()/videoDuration*100).clamp(0,100).toDouble());
     });
   }
 
@@ -65,20 +63,18 @@ class _ConverterAppState extends State<ConverterApp> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: isConverting ? Color(0xFF020B1E) : Colors.white,
-      appBar: AppBar(title: Text("Real 4K Converter Pro"), backgroundColor: Colors.deepPurple),
-      body: Center(
-        child: Padding(padding: EdgeInsets.all(20), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          if (isConverting) ...[
-            Container(width: 320, height: 32, decoration: BoxDecoration(border: Border.all(color: Colors.cyanAccent, width: 2), borderRadius: BorderRadius.circular(20), color: Color(0xFF0A1931)), child: ClipRRect(borderRadius: BorderRadius.circular(20), child: Align(alignment: Alignment.centerLeft, child: FractionallySizedBox(widthFactor: progress/100, child: Container(decoration: BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF1E3A8A), Color(0xFF00FFFF)]))))))),
-            SizedBox(height: 12),
-            Text("LOADING... ${progress.toInt()}%", style: TextStyle(color: Colors.cyanAccent, fontSize: 20, fontWeight: FontWeight.bold)),
-          ],
-          SizedBox(height: 30),
-          Text(status, textAlign: TextAlign.center, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isConverting ? Colors.white : Colors.black)),
-          SizedBox(height: 40),
-          ElevatedButton(onPressed: isConverting ? null : pickAndConvert, style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple, foregroundColor: Colors.white), child: Text("SELECT VIDEO & CONVERT TO 4K")),
-        ])),
-      ),
+      appBar: AppBar(title: Text("Real 4K Converter"), backgroundColor: Colors.deepPurple),
+      body: Center(child: Padding(padding: EdgeInsets.all(20), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        if(isConverting)...[
+          Container(width: 320, height: 32, decoration: BoxDecoration(border: Border.all(color: Colors.cyanAccent, width: 2), borderRadius: BorderRadius.circular(20), color: Color(0xFF0A1931)), child: ClipRRect(borderRadius: BorderRadius.circular(20), child: Align(alignment: Alignment.centerLeft, child: FractionallySizedBox(widthFactor: progress/100, child: Container(decoration: BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF1E3A8A), Color(0xFF00FFFF)]))))))),
+          SizedBox(height: 12),
+          Text("LOADING... ${progress.toInt()}%", style: TextStyle(color: Colors.cyanAccent, fontSize: 20, fontWeight: FontWeight.bold)),
+        ],
+        SizedBox(height: 30),
+        Text(status, textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        SizedBox(height: 40),
+        ElevatedButton(onPressed: isConverting ? null : pickAndConvert, style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple, foregroundColor: Colors.white), child: Text("SELECT VIDEO & CONVERT TO 4K")),
+      ]))),
     );
   }
 }
