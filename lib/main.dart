@@ -36,18 +36,18 @@ class MergedAppState extends State<MergedApp> {
   };
 
   final previewMatrix = {
-    "HD Dark": [1.15,0,0,0,6, 0,1.15,0,0,6, 0,0,1.28,0,12, 0,0,0,1,0],
-    "Quality Restore": [1.22,0,0,0,12, 0,1.22,0,0,12, 0,0,1.22,0,12, 0,0,0,1,0],
-    "4K": [1.28,0,0,0,10, 0,1.28,0,0,10, 0,0,1.28,0,10, 0,0,0,1,0],
-    "Retro Print": [1.28,0.08,0,0,14, 0,1.14,0.05,0,8, -0.18,0.08,0.88,0,2, 0,0,0,1,0],
-    "Oppenheimer": [1.38,0.12,0,0,2, 0.12,0.85,0,0,-6, 0,0,0.70,0,-10, 0,0,0,1,0],
-    "Wong Kar-wai": [1.42,0.15,-0.10,0,14, -0.10,1.0,-0.10,0,2, -0.20,0.12,0.78,0,-4, 0,0,0,1,0],
-    "Badburry": [1.32,0,0,0,18, 0,1.08,0,0,10, 0,0,1.28,0,14, 0,0,0,1,0],
-    "Flash CCD": [1.35,0.12,0,0,24, 0,1.22,0.12,0,18, 0,0,1.02,0,4, 0,0,0,1,0],
-    "Universal Suns": [1.38,0.18,0,0,10, 0.10,1.12,0,0,2, 0,0,0.72,0,-4, 0,0,0,1,0],
-    "Glow": [1.25,0.12,0.12,0,28, 0.12,1.25,0.12,0,28, 0.12,0.12,1.25,0,28, 0,0,0,1,0],
-    "Dark 1": [0.92,0,0,0,-8, 0,0.92,0,0,-8, 0,0,0.92,0,-8, 0,0,0,1,0],
-    "Low-key": [1.22,0,0,0,-12, 0,1.22,0,0,-12, 0,0,1.22,0,-12, 0,0,0,1,0],
+    "HD Dark": [1.15,0.0,0.0,0.0,6.0, 0.0,1.15,0.0,0.0,6.0, 0.0,0.0,1.28,0.0,12.0, 0.0,0.0,0.0,1.0,0.0],
+    "Quality Restore": [1.22,0.0,0.0,0.0,12.0, 0.0,1.22,0.0,0.0,12.0, 0.0,0.0,1.22,0.0,12.0, 0.0,0.0,0.0,1.0,0.0],
+    "4K": [1.28,0.0,0.0,0.0,10.0, 0.0,1.28,0.0,0.0,10.0, 0.0,0.0,1.28,0.0,10.0, 0.0,0.0,0.0,1.0,0.0],
+    "Retro Print": [1.28,0.08,0.0,0.0,14.0, 0.0,1.14,0.05,0.0,8.0, -0.18,0.08,0.88,0.0,2.0, 0.0,0.0,0.0,1.0,0.0],
+    "Oppenheimer": [1.38,0.12,0.0,0.0,2.0, 0.12,0.85,0.0,0.0,-6.0, 0.0,0.0,0.70,0.0,-10.0, 0.0,0.0,0.0,1.0,0.0],
+    "Wong Kar-wai": [1.42,0.15,-0.10,0.0,14.0, -0.10,1.0,-0.10,0.0,2.0, -0.20,0.12,0.78,0.0,-4.0, 0.0,0.0,0.0,1.0,0.0],
+    "Badburry": [1.32,0.0,0.0,0.0,18.0, 0.0,1.08,0.0,0.0,10.0, 0.0,0.0,1.28,0.0,14.0, 0.0,0.0,0.0,1.0,0.0],
+    "Flash CCD": [1.35,0.12,0.0,0.0,24.0, 0.0,1.22,0.12,0.0,18.0, 0.0,0.0,1.02,0.0,4.0, 0.0,0.0,0.0,1.0,0.0],
+    "Universal Suns": [1.38,0.18,0.0,0.0,10.0, 0.10,1.12,0.0,0.0,2.0, 0.0,0.0,0.72,0.0,-4.0, 0.0,0.0,0.0,1.0,0.0],
+    "Glow": [1.25,0.12,0.12,0.0,28.0, 0.12,1.25,0.12,0.0,28.0, 0.12,0.12,1.25,0.0,28.0, 0.0,0.0,0.0,1.0,0.0],
+    "Dark 1": [0.92,0.0,0.0,0.0,-8.0, 0.0,0.92,0.0,0.0,-8.0, 0.0,0.0,0.92,0.0,-8.0, 0.0,0.0,0.0,1.0,0.0],
+    "Low-key": [1.22,0.0,0.0,0.0,-12.0, 0.0,1.22,0.0,0.0,-12.0, 0.0,0.0,1.22,0.0,-12.0, 0.0,0.0,0.0,1.0,0.0],
   };
 
   final ffmpegMap = {
@@ -60,10 +60,10 @@ class MergedAppState extends State<MergedApp> {
     "Enhance": "eq=contrast=1.18:brightness=0.07:saturation=1.40,unsharp=5:5:1.0:5:5:0",
     "Quality II": "eq=contrast=1.22:brightness=0.06:saturation=1.45",
     "HD Upscale": "scale=1080:1920:flags=lanczos,scale=2160:3840:flags=lanczos,unsharp=5:5:1.2:5:5:0",
-    "HD Cam 2": "eq=brightness=0.07:contrast=1.28:saturation=1.45,unsharp=5:5:1.2:5:5:0",
-    "HD Pet": "eq=saturation=1.50:contrast=1.22:brightness=0.06,colorbalance=gs=0.20:rs=0.12",
+    "HD Cam 2": "eq=brightness=0.07:contrast=1.28:saturation=1.45,unsharp=5:5:1.2:5:5:0",    "HD Pet": "eq=saturation=1.50:contrast=1.22:brightness=0.06,colorbalance=gs=0.20:rs=0.12",
     "Oppenheimer": "eq=saturation=0.62:contrast=1.48:brightness=-0.04,curves=strong_contrast",
-    "Wong Kar-wai": "curves=vintage,colorbalance=rs=0.38:gs=-0.20:bs=-0.30,eq=saturation=1.38:contrast=1.22",    "Black Panther": "eq=saturation=0.88:contrast=1.32:brightness=-0.06,colorbalance=bs=0.22",
+    "Wong Kar-wai": "curves=vintage,colorbalance=rs=0.38:gs=-0.20:bs=-0.30,eq=saturation=1.38:contrast=1.22",
+    "Black Panther": "eq=saturation=0.88:contrast=1.32:brightness=-0.06,colorbalance=bs=0.22",
     "Badburry": "colorbalance=rs=0.32:bs=0.32,eq=saturation=1.45:contrast=1.32:brightness=0.08",
     "Freedom": "eq=saturation=1.65:contrast=1.28:brightness=0.09",
     "Hasselblad 2": "eq=saturation=1.38:contrast=1.28:brightness=0.05",
@@ -143,7 +143,7 @@ class MergedAppState extends State<MergedApp> {
 
   @override
   Widget build(BuildContext context) {
-    List<double> mat = previewMatrix[selectedFilter]?? [1.15,0,0,0,10, 0,1.15,0,0,10, 0,0,1.20,0,12, 0,0,0,1,0];
+    List<double> mat = (previewMatrix[selectedFilter]?? [1.15,0.0,0.0,0.0,10.0, 0.0,1.15,0.0,0.0,10.0, 0.0,0.0,1.20,0.0,12.0, 0.0,0.0,0.0,1.0,0.0]).map((e) => (e as num).toDouble()).toList();
     return Scaffold(
       backgroundColor: Color(0xFF0A0A0A),
       appBar: AppBar(title: Text("HATKE ALL FILTERS WORKING", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)), backgroundColor: Colors.purple, toolbarHeight: 40),
