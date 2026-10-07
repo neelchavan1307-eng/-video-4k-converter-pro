@@ -15,13 +15,7 @@ jobs:
           channel: 'stable'
       - run: rm -rf android
       - run: flutter create . --platforms=android --project-name video_4k_converter_pro
-      - name: Fix minSdk 24
-        run: |
-          echo "flutter.minSdkVersion=24" >> android/local.properties
-          sed -i 's/minSdkVersion 21/minSdkVersion 24/g' android/app/build.gradle || true
-          sed -i 's/minSdk = 21/minSdk = 24/g' android/app/build.gradle || true
-          sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 24/g' android/app/build.gradle || true
-          sed -i 's/minSdk.*/minSdk = 24/' android/app/build.gradle || true
+      - run: echo "flutter.minSdkVersion=24" >> android/local.properties
       - run: flutter clean && flutter pub get
       - run: flutter build apk --release --no-tree-shake-icons
       - uses: actions/upload-artifact@v4
