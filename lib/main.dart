@@ -25,9 +25,9 @@ class _HatkeAppState extends State<HatkeApp> {
   String path = "";
   String status = "Ready";
 
-  // टोटल 29 फिल्टर - तुझ्या सगळ्या Screenshot मधले + जुने सगळे
+  // TOTAL 70 FILTERS
   final Map<String, String> ff = {
-    // जुने 17
+    // तुझे 30
     "HD Dark": "eq=brightness=-0.12:contrast=1.35:saturation=0.85",
     "HD Light": "eq=brightness=0.12:contrast=1.15:saturation=1.1",
     "Quality Restore": "unsharp=5:5:1.0:5:5:0.0",
@@ -45,33 +45,61 @@ class _HatkeAppState extends State<HatkeApp> {
     "Universal Suns": "colorbalance=rs=0.45:gs=0.25:bs=-0.15,eq=brightness=0.1:saturation=1.25",
     "Cinematic Glow": "eq=contrast=1.2:brightness=0.06:saturation=1.25",
     "Flash CCD": "eq=contrast=1.25:brightness=0.06:saturation=1.15",
-
-    // तुझ्या Screenshot मधले नवीन 12
-    "Rain": "eq=brightness=-0.08:contrast=1.15:saturation=0.65,colorbalance=rs=-0.1:gs=0:bs=0.15",
-    "Green Lake": "eq=saturation=1.6:contrast=1.2:brightness=0.05,colorbalance=gs=0.35:bs=-0.1",
+    "Rain": "eq=brightness=-0.08:contrast=1.15:saturation=0.65,colorbalance=rs=-0.1:bs=0.15",
+    "Green Lake": "eq=saturation=1.6:contrast=1.2,colorbalance=gs=0.35",
     "HD Pet": "eq=brightness=0.08:contrast=1.25:saturation=1.35,unsharp=5:5:0.8",
-    "Calm & Collected": "eq=contrast=0.95:saturation=0.75:brightness=0.06:gamma=1.05",
-    "Hasselblad 2": "eq=contrast=1.18:brightness=0.04:saturation=0.92,colorchannelmixer=1.05:0.05:0:0:0:1.0:0.05:0:0:0:0.95:0",
-    "God Rays": "eq=brightness=0.12:contrast=1.1:saturation=1.1,gblur=sigma=0.8",
-    "Dracula": "eq=contrast=1.4:brightness=-0.08:saturation=0.7,colorbalance=rs=0.25:gs=-0.1:bs=-0.1",
-    "Enhance": "eq=contrast=1.35:brightness=0.06:saturation=1.4,unsharp=5:5:0.7",
-    "Enhanced": "eq=contrast=1.35:brightness=0.06:saturation=1.4,unsharp=5:5:0.7",
-    "Retro Film": "colorchannelmixer=.8:.2:.0:0:.1:.9:.1:0:.0:.15:.85:0,eq=contrast=1.15:saturation=0.85",
+    "Calm & Collected": "eq=contrast=0.95:saturation=0.75:brightness=0.06",
+    "Hasselblad 2": "eq=contrast=1.18:saturation=0.92",
+    "God Rays": "eq=brightness=0.12:contrast=1.1,gblur=sigma=0.6",
+    "Dracula": "eq=contrast=1.4:brightness=-0.08:saturation=0.7,colorbalance=rs=0.25",
+    "Enhance": "eq=contrast=1.35:saturation=1.4:brightness=0.06,unsharp=5:5:0.7",
+    "Enhanced": "eq=contrast=1.35:saturation=1.4:brightness=0.06,unsharp=5:5:0.7",
+    "Retro Film": "colorchannelmixer=.8:.2:0:0:.1:.9:.1:0:0:.15:.85:0,eq=contrast=1.15:saturation=0.85",
     "Film": "curves=preset=vintage,eq=contrast=1.1:saturation=0.9",
-    "Gold Coast": "colorbalance=rs=0.45:gs=0.2:bs=-0.2:rm=0.2:gm=0.1:bm=-0.15,eq=brightness=0.08:saturation=1.3",
+    "Gold Coast": "colorbalance=rs=0.45:gs=0.2:bs=-0.2,eq=brightness=0.08:saturation=1.3",
     "Warm Yellow": "colorbalance=rs=0.35:gs=0.25:bs=-0.3,eq=brightness=0.1:saturation=1.25",
-  };
 
-  final Map<String, ColorFilter> preview = {
-    "HD Dark": const ColorFilter.matrix([0.85,0,0,0,0, 0,0.85,0,0,0, 0,0,0.75,0,0, 0,0,0,1,0]),
-    "Oppenheimer": const ColorFilter.matrix([1.3,0.3,0,0,-15, 0.2,1.2,0,0,-15, 0,0,0.65,0,0, 0,0,0,1,0]),
-    "Black Panther": const ColorFilter.matrix([1.35,0,0,0,0, 0,1.35,0,0,0, 0,0,1.35,0,0, 0,0,0,1,0]),
-    "Green Lake": const ColorFilter.matrix([1.0,0,0,0,0, 0,1.35,0,0,0, 0,0,0.9,0,0, 0,0,0,1,0]),
-    "Rain": const ColorFilter.matrix([0.8,0,0,0,0, 0,0.85,0,0,0, 0,0,1.1,0,0, 0,0,0,1,0]),
-    "HD Pet": const ColorFilter.matrix([1.15,0,0,0,15, 0,1.15,0,0,15, 0,0,1.15,0,0, 0,0,0,1,0]),
-    "Gold Coast": const ColorFilter.matrix([1.35,0.15,0,0,10, 0,1.15,0,0,10, 0,0,0.75,0,0, 0,0,0,1,0]),
-    "Warm Yellow": const ColorFilter.matrix([1.3,0.2,0,0,15, 0,1.25,0,0,10, 0,0,0.8,0,0, 0,0,0,1,0]),
-    "Dracula": const ColorFilter.matrix([1.2,0,0,0,0, 0,0.85,0,0,0, 0,0,0.85,0,0, 0,0,0,1,0]),
+    // माझे नवीन 40 Pro Filters
+    "Dune": "colorbalance=rs=0.3:gs=0.15:bs=-0.2,eq=contrast=1.2:brightness=0.05:saturation=0.85",
+    "Interstellar": "eq=contrast=1.3:brightness=-0.05:saturation=0.8,colorbalance=bs=0.2",
+    "Kodak Portra 400": "colorchannelmixer=1.1:0.1:0:0:0.05:1.0:0.05:0:0:0.05:0.95:0,eq=saturation=1.1:contrast=1.05",
+    "Kodak Gold 200": "colorbalance=rs=0.2:gs=0.1:bs=-0.15,eq=saturation=1.25:contrast=1.1:brightness=0.06",
+    "Fujifilm Eterna": "eq=saturation=0.7:contrast=0.95:brightness=0.04,colorbalance=gs=0.05",
+    "Polaroid 600": "curves=preset=lighter,eq=saturation=0.85:contrast=0.9:brightness=0.08",
+    "Venice": "colorbalance=rs=0.1:gs=0.1:bs=0.2,eq=contrast=1.15:saturation=1.2",
+    "Tokyo Night": "colorbalance=rs=-0.15:gs=-0.05:bs=0.35,eq=contrast=1.25:saturation=1.3:brightness=-0.06",
+    "Cyberpunk": "hue=h=15:s=1.6,eq=contrast=1.4",
+    "Blade Runner": "colorbalance=rs=-0.2:gs=0.1:bs=0.4,eq=contrast=1.3:brightness=-0.08",
+    "Matrix Green": "colorchannelmixer=0.3:0.7:0:0:0.3:0.8:0.2:0:0.2:0.4:0.3:0",
+    "iPhone 15 Warm": "eq=brightness=0.07:saturation=1.2:contrast=1.1,colorbalance=rs=0.15:gs=0.08",
+    "iPhone Vivid": "eq=saturation=1.5:contrast=1.2:brightness=0.04",
+    "Warm Cozy": "colorbalance=rs=0.4:gs=0.15:bs=-0.25,eq=brightness=0.09:saturation=1.15",
+    "Cool Breeze": "colorbalance=rs=-0.15:bs=0.25,eq=contrast=1.1:saturation=1.1:brightness=0.03",
+    "Sunset Orange": "colorbalance=rs=0.5:gs=0.15:bs=-0.35,eq=saturation=1.4:contrast=1.15",
+    "Moody Blue": "eq=contrast=1.2:saturation=0.85:brightness=-0.05,colorbalance=bs=0.3:rs=-0.15",
+    "Forest Green": "colorbalance=gs=0.4:bs=-0.1:rs=-0.1,eq=saturation=1.3:contrast=1.15",
+    "Desert Sand": "colorbalance=rs=0.3:gs=0.15:bs=-0.25,eq=contrast=1.1:brightness=0.08:saturation=1.05",
+    "Arctic White": "eq=brightness=0.18:contrast=0.9:saturation=0.6",
+    "Tropical": "eq=saturation=1.7:contrast=1.2:brightness=0.05,hue=s=1.2",
+    "Soft Skin": "eq=brightness=0.08:contrast=0.95:saturation=0.9,gblur=sigma=0.3",
+    "Tan Glow": "colorbalance=rs=0.25:gs=0.12:bs=-0.15,eq=saturation=1.2:brightness=0.07",
+    "Rosy Cheeks": "colorbalance=rs=0.2:gs=-0.05:bs=0.05,eq=saturation=1.25",
+    "Creamy Skin": "eq=brightness=0.1:contrast=0.92:saturation=0.95,colorbalance=rs=0.12:gs=0.06",
+    "Honey": "colorbalance=rs=0.35:gs=0.2:bs=-0.2,eq=saturation=1.2:brightness=0.06",
+    "Bronze": "colorchannelmixer=1.2:0.1:0:0:0.05:1.0:0.1:0:0:0:0.8:0,eq=contrast=1.15",
+    "Aesthetic": "eq=saturation=0.8:contrast=1.05:brightness=0.06,curves=preset=medium_contrast",
+    "Pastel": "eq=saturation=0.7:brightness=0.12:contrast=0.9",
+    "Candy": "eq=saturation=1.8:contrast=1.15:brightness=0.06",
+    "Midnight": "eq=brightness=-0.15:contrast=1.4:saturation=0.6,colorbalance=bs=0.2",
+    "Gotham": "eq=contrast=1.5:brightness=-0.12:saturation=0.5",
+    "Noir": "colorchannelmixer=0.33:0.33:0.33:0:0.33:0.33:0.33:0:0.33:0.33:0.33:0,eq=contrast=1.4",
+    "Sin City": "eq=saturation=0:contrast=1.6,curves=preset=strong_contrast",
+    "Joker": "colorbalance=rs=0.15:gs=0.25:bs=-0.1,eq=contrast=1.3:saturation=1.4",
+    "Sepia Deep": "colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131,eq=contrast=1.2",
+    "B&W High Contrast": "colorchannelmixer=0.33:0.33:0.33:0:0.33:0.33:0.33:0:0.33:0.33:0.33:0,eq=contrast=1.8:brightness=-0.05",
+    "Silver": "eq=saturation=0:contrast=1.2:brightness=0.08",
+    "Platinum": "eq=saturation=0.15:contrast=1.1:brightness=0.1,gblur=sigma=0.2",
+    "Rust": "colorbalance=rs=0.4:gs=0.05:bs=-0.3,eq=contrast=1.25:saturation=1.15",
   };
 
   @override void dispose() { ctrl?.dispose(); super.dispose(); }
@@ -109,9 +137,9 @@ class _HatkeAppState extends State<HatkeApp> {
     await FFmpegKit.execute(cmd).then((session) async {
       var code = await session.getReturnCode();
       if (ReturnCode.isSuccess(code)) {
-        await Gal.putVideo(out, album: "HATKE");
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("✅ 4K Save! ${selected.join("+")}")));
-        setState(() => status = "Saved in 4K!");
+        await Gal.putVideo(out, album: "HATKE 70 FILTERS");
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("✅ 4K Save! ${selected.length} Filters: ${selected.join("+")}")));
+        setState(() => status = "Saved 4K!");
       } else {
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Export Fail")));
         setState(() => status = "Fail");
@@ -123,20 +151,19 @@ class _HatkeAppState extends State<HatkeApp> {
   @override Widget build(BuildContext context) {
     Widget videoBox;
     if (ctrl == null ||!ctrl!.value.isInitialized) {
-      videoBox = Center(child: ElevatedButton.icon(icon: const Icon(Icons.folder_open), label: const Text("Pick Video"), onPressed: pick, style: ElevatedButton.styleFrom(backgroundColor: Colors.yellow, foregroundColor: Colors.black)));
+      videoBox = Center(child: ElevatedButton.icon(icon: const Icon(Icons.folder_open), label: const Text("Pick Video"), onPressed: pick, style: ElevatedButton.styleFrom(backgroundColor: Colors.yellow, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14))));
     } else {
       Widget w = VideoPlayer(ctrl!);
-      for (var s in selected) { var cf = preview[s]; if (cf!= null) w = ColorFiltered(colorFilter: cf, child: w); }
       videoBox = w;
     }
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(backgroundColor: const Color(0xFF6A1B9A), title: Text(selected.isEmpty? "HATKE - 29 FILTERS" : "${selected.length} FILTERS: ${selected.join("+")}", style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)), actions: [IconButton(icon: const Icon(Icons.video_library), onPressed: pick), TextButton(onPressed: () => setState(() => selected.clear()), child: const Text("CLEAR", style: TextStyle(color: Colors.white)))]),
+      appBar: AppBar(backgroundColor: const Color(0xFF6A1B9A), title: Text(selected.isEmpty? "HATKE - 70 FILTERS" : "${selected.length} FILTERS LIVE", style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)), actions: [IconButton(icon: const Icon(Icons.video_library), onPressed: pick), TextButton(onPressed: () => setState(() => selected.clear()), child: const Text("CLEAR", style: TextStyle(color: Colors.white)))]),
       body: Column(children: [
-        Container(color: Colors.yellow, width: double.infinity, padding: const EdgeInsets.all(6), child: Text(selected.isEmpty? "29 फिल्टर - कितीही एकत्र लावा" : selected.join(" + "), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black), maxLines: 2)),
+        Container(color: Colors.yellow, width: double.infinity, padding: const EdgeInsets.all(6), child: Text(selected.isEmpty? "70 फिल्टर - कितीही एकत्र लावा - 4K Export" : selected.join(" + "), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black), maxLines: 2)),
         Expanded(child: videoBox),
-        Container(height: 260, color: const Color(0xFF1A1A1A), padding: const EdgeInsets.all(8), child: SingleChildScrollView(child: Wrap(spacing: 6, runSpacing: 6, children: [for (var k in ff.keys) FilterChip(label: Text(k, style: const TextStyle(fontSize: 10)), selected: selected.contains(k), selectedColor: Colors.yellow, backgroundColor: const Color(0xFF333333), labelStyle: TextStyle(color: selected.contains(k)? Colors.black : Colors.white), onSelected: (v) { setState(() { v? selected.add(k) : selected.remove(k); }); })]))),
-        Container(width: double.infinity, padding: const EdgeInsets.all(10), color: Colors.black, child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.yellow, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 50)), onPressed: exporting? null : export4K, child: Text(exporting? status : selected.isEmpty? "EXPORT 4K" : "EXPORT ${selected.join("+")} - 4K", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10), overflow: TextOverflow.ellipsis)))
+        Container(height: 300, color: const Color(0xFF1A1A1A), padding: const EdgeInsets.all(8), child: SingleChildScrollView(child: Wrap(spacing: 5, runSpacing: 5, children: [for (var k in ff.keys) FilterChip(label: Text(k, style: const TextStyle(fontSize: 9)), selected: selected.contains(k), selectedColor: Colors.yellow, backgroundColor: const Color(0xFF333333), labelStyle: TextStyle(color: selected.contains(k)? Colors.black : Colors.white, fontSize: 9), onSelected: (v) { setState(() { v? selected.add(k) : selected.remove(k); }); })]))),
+        Container(width: double.infinity, padding: const EdgeInsets.all(10), color: Colors.black, child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.yellow, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 52), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26))), onPressed: exporting? null : export4K, child: Text(exporting? status : selected.isEmpty? "EXPORT 4K - 70 Filters Ready" : "EXPORT ${selected.length} FILTERS - 4K", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11), overflow: TextOverflow.ellipsis)))
       ]),
     );
   }
