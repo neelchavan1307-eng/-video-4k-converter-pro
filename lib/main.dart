@@ -22,234 +22,158 @@ class MergedAppState extends State<MergedApp> {
   String status = "Video Select Kara";
   bool processing = false;
   double progress = 0;
-
+  Timer? timer;
   double sharpen = 75;
-  double intensity = 45;
-  String selectedCategory = "Cinematic";
-  List<String> selectedFilters = ["Retro Print"];
+  double intensity = 90;
+  String selectedCategory = "Quality";
+  String selectedFilter = "HD Dark";
 
-  final Map<String, List<String>> categories = {
-    "Cinematic": ["Retro Print", "Badbunny", "Clear Sky", "Oppenheimer", "Wong Kar Wai", "Green Orange", "Freedom"],
-    "Quality Enhance": ["Quality Boost", "HD Skin", "HD Uplight"],
-    "Glow": ["Film CCD", "Glow", "Summer Ship", "Bright"],
-    "Vintage": ["Antique", "Retro Film", "Universal S."],
-    "Night": ["Lunar Night", "Midnight", "Green Yellow"],
+  final categories = {
+    "Quality": ["Quality Restore", "4K", "HD Light", "Focus", "Enhance", "Quality II", "HD Dark", "HD Upscale", "HD Cam 2", "HD Pet"],
+    "Cinematic": ["Oppenheimer", "Wong Kar-wai", "Black Panther", "Badburry", "Freedom", "Hasselblad 2", "Green Orange", "Sicily", "Kendall", "Retro Print"],
+    "Glow": ["Flash CCD", "Universal Suns", "Glow", "Cinematic Glow", "Modern Oil-paint", "Dreamy Halo"],
+    "Dark": ["Dark 1", "Silver", "Humble", "Low-key"],
   };
 
-  // PREVIEW SATHI REAL MATRIX - ha app madhe disnar
-  final Map<String, List<double>> previewMatrix = {
-    "Retro Print": [1.2, 0.05, 0.0, 0, 10, 0.0, 1.1, 0.05, 0, 5, -0.2, 0.1, 0.9, 0, 0, 0,0,0,1,0],
-    "Badbunny": [1.25, 0, 0, 0, 15, 0, 1.05, 0, 0, 8, 0, 0, 1.2, 0, 10, 0,0,0,1,0],
-    "Clear Sky": [1.1, 0, 0, 0, 5, 0, 1.15, 0, 0, 10, 0, 0, 1.35, 0, 15, 0,0,0,1,0],
-    "Oppenheimer": [1.3, 0.1, 0, 0, 0, 0.1, 0.9, 0, 0, -5, 0, 0, 0.8, 0, -10, 0,0,0,1,0],
-    "Wong Kar Wai": [1.35, 0.1, -0.1, 0, 10, -0.1, 1.0, -0.1, 0, 0, -0.2, 0.1, 0.8, 0, -5, 0,0,0,1,0],
-    "Green Orange": [1.4, 0.2, 0, 0, 10, 0.1, 1.0, 0, 0, 0, -0.3, 0, 0.7, 0, 0, 0,0,0,1,0],
-    "Freedom": [1.15, 0, 0, 0, 15, 0, 1.15, 0, 0, 15, 0, 0, 1.15, 0, 15, 0,0,0,1,0],
-    "Hasselblad 2": [1.2, 0, 0, 0, 8, 0, 1.2, 0, 0, 8, 0, 0, 1.2, 0, 8, 0,0,0,1,0],
-    "Quality Boost": [1.1, 0, 0, 0, 8, 0, 1.1, 0, 0, 8, 0, 0, 1.1, 0, 8, 0,0,0,1,0],
-    "Summer Ship": [1.05, 0.1, 0, 0, 20, 0, 1.2, 0.1, 0, 15, 0, 0, 0.95, 0, 0, 0,0,0,1,0],
-    "Bright": [1.2, 0, 0, 0, 25, 0, 1.2, 0, 0, 25, 0, 0, 1.2, 0, 25, 0,0,0,1,0],
-    "Universal S.": [1.3, 0.15, 0, 0, 5, 0.1, 1.0, 0, 0, 0, 0, 0, 0.75, 0, -5, 0,0,0,1,0],
-    "Green Yellow": [1.1, 0.15, 0, 0, 5, 0.1, 1.25, 0, 0, 10, 0, 0, 0.8, 0, 0, 0,0,0,1,0],
+  final previewMatrix = {
+    "HD Dark": [1.15,0,0,0,6, 0,1.15,0,0,6, 0,0,1.28,0,12, 0,0,0,1,0],
+    "Quality Restore": [1.22,0,0,0,12, 0,1.22,0,0,12, 0,0,1.22,0,12, 0,0,0,1,0],
+    "4K": [1.28,0,0,0,10, 0,1.28,0,0,10, 0,0,1.28,0,10, 0,0,0,1,0],
+    "Retro Print": [1.28,0.08,0,0,14, 0,1.14,0.05,0,8, -0.18,0.08,0.88,0,2, 0,0,0,1,0],
+    "Oppenheimer": [1.38,0.12,0,0,2, 0.12,0.85,0,0,-6, 0,0,0.70,0,-10, 0,0,0,1,0],
+    "Wong Kar-wai": [1.42,0.15,-0.10,0,14, -0.10,1.0,-0.10,0,2, -0.20,0.12,0.78,0,-4, 0,0,0,1,0],
+    "Badburry": [1.32,0,0,0,18, 0,1.08,0,0,10, 0,0,1.28,0,14, 0,0,0,1,0],
+    "Flash CCD": [1.35,0.12,0,0,24, 0,1.22,0.12,0,18, 0,0,1.02,0,4, 0,0,0,1,0],
+    "Universal Suns": [1.38,0.18,0,0,10, 0.10,1.12,0,0,2, 0,0,0.72,0,-4, 0,0,0,1,0],
+    "Glow": [1.25,0.12,0.12,0,28, 0.12,1.25,0.12,0,28, 0.12,0.12,1.25,0,28, 0,0,0,1,0],
+    "Dark 1": [0.92,0,0,0,-8, 0,0.92,0,0,-8, 0,0,0.92,0,-8, 0,0,0,1,0],
+    "Low-key": [1.22,0,0,0,-12, 0,1.22,0,0,-12, 0,0,1.22,0,-12, 0,0,0,1,0],
   };
 
-  // SAVE SATHI FFmpeg FILTER - toch effect video save hotana
-  final Map<String, String> ffmpegMap = {
-    "Retro Print": "colorbalance=gs=0.20:bs=-0.30:rs=0.20,eq=saturation=1.45:contrast=1.20:brightness=0.04",
-    "Badbunny": "colorbalance=rs=0.25:bs=0.25,eq=saturation=1.35:contrast=1.25:brightness=0.06",
-    "Clear Sky": "eq=saturation=1.6:contrast=1.30:brightness=0.05,colorbalance=bs=0.20:gs=0.10",
-    "Oppenheimer": "eq=saturation=0.70:contrast=1.40:brightness=-0.02,curves=strong_contrast",
-    "Wong Kar Wai": "curves=vintage,colorbalance=rs=0.30:gs=-0.15:bs=-0.25,eq=saturation=1.30:contrast=1.15",
-    "Green Orange": "colorbalance=rs=0.40:gs=-0.15:bs=-0.40,eq=saturation=1.40:contrast=1.20",
-    "Freedom": "eq=saturation=1.50:contrast=1.20:brightness=0.06",
-    "Hasselblad 2": "eq=saturation=1.35:contrast=1.25:brightness=0.04,colorbalance=rs=0.10:gs=0.08",
-    "Quality Boost": "eq=contrast=1.25:brightness=0.05:saturation=1.45,unsharp=5:5:1.2:5:5:0",
-    "Summer Ship": "eq=brightness=0.10:saturation=1.60:contrast=1.15,colorbalance=gs=0.25",
-    "Bright": "eq=brightness=0.18:saturation=1.70:contrast=1.10",
-    "Universal S.": "eq=contrast=1.40:saturation=1.45,colorbalance=rs=0.45:ys=0.25,curves=vintage",
-    "Green Yellow": "eq=contrast=1.25:saturation=1.30,colorchannelmixer=rr=1.15:gg=1.20:bb=0.85",
+  final ffmpegMap = {
+    "BASE": "eq=brightness=0.02:contrast=1.23:saturation=1.11:gamma=0.98,unsharp=5:5:1.0:5:5:0",
+    "HD Dark": "eq=brightness=0.02:contrast=1.23:saturation=1.11,unsharp=5:5:1.0:5:5:0,colorbalance=rs=-0.12:bs=0.18",
+    "Quality Restore": "scale=iw*1.25:ih*1.25:flags=lanczos,scale=1080:1920:flags=lanczos,unsharp=5:5:1.6:5:5:0,eq=contrast=1.28:saturation=1.35",
+    "4K": "scale=3840:2160:flags=lanczos:force_original_aspect_ratio=decrease,pad=3840:2160:(ow-iw)/2:(oh-ih)/2,scale=2160:3840:flags=lanczos,eq=saturation=1.30",
+    "HD Light": "eq=brightness=0.14:saturation=1.30:contrast=1.12,unsharp=5:5:0.8:5:5:0",
+    "Focus": "unsharp=5:5:2.2:5:5:0,eq=contrast=1.22:saturation=1.25",
+    "Enhance": "eq=contrast=1.18:brightness=0.07:saturation=1.40,unsharp=5:5:1.0:5:5:0",
+    "Quality II": "eq=contrast=1.22:brightness=0.06:saturation=1.45",
+    "HD Upscale": "scale=1080:1920:flags=lanczos,scale=2160:3840:flags=lanczos,unsharp=5:5:1.2:5:5:0",
+    "HD Cam 2": "eq=brightness=0.07:contrast=1.28:saturation=1.45,unsharp=5:5:1.2:5:5:0",
+    "HD Pet": "eq=saturation=1.50:contrast=1.22:brightness=0.06,colorbalance=gs=0.20:rs=0.12",
+    "Oppenheimer": "eq=saturation=0.62:contrast=1.48:brightness=-0.04,curves=strong_contrast",
+    "Wong Kar-wai": "curves=vintage,colorbalance=rs=0.38:gs=-0.20:bs=-0.30,eq=saturation=1.38:contrast=1.22",    "Black Panther": "eq=saturation=0.88:contrast=1.32:brightness=-0.06,colorbalance=bs=0.22",
+    "Badburry": "colorbalance=rs=0.32:bs=0.32,eq=saturation=1.45:contrast=1.32:brightness=0.08",
+    "Freedom": "eq=saturation=1.65:contrast=1.28:brightness=0.09",
+    "Hasselblad 2": "eq=saturation=1.38:contrast=1.28:brightness=0.05",
+    "Green Orange": "colorbalance=rs=0.48:gs=-0.20:bs=-0.48,eq=saturation=1.55:contrast=1.28",
+    "Sicily": "eq=saturation=0.82:contrast=1.22,colorbalance=rs=0.22:bs=-0.12,curves=vintage",
+    "Kendall": "eq=saturation=1.25:contrast=1.18:brightness=0.09",
+    "Retro Print": "colorbalance=gs=0.28:bs=-0.38:rs=0.28,eq=saturation=1.60:contrast=1.28:brightness=0.06",
+    "Flash CCD": "eq=brightness=0.16:saturation=1.75:contrast=1.22,unsharp=5:5:1.1:5:5:0",
+    "Universal Suns": "eq=contrast=1.42:saturation=1.55:brightness=0.07,colorbalance=rs=0.42:ys=0.22,curves=vintage",
+    "Glow": "gblur=sigma=0.5:steps=1,eq=brightness=0.13:saturation=1.65:contrast=1.18",
+    "Cinematic Glow": "eq=brightness=0.11:saturation=1.55:contrast=1.22,gblur=sigma=0.4,curves=strong_contrast",
+    "Modern Oil-paint": "eq=saturation=1.65:contrast=1.32",
+    "Dreamy Halo": "gblur=sigma=0.9:steps=1,eq=brightness=0.11:saturation=1.45",
+    "Dark 1": "eq=brightness=-0.09:contrast=1.35:saturation=0.88,curves=strong_contrast",
+    "Silver": "eq=saturation=0.12:contrast=1.22:brightness=0.06",
+    "Humble": "eq=saturation=0.82:contrast=1.18:brightness=-0.03",
+    "Low-key": "eq=brightness=-0.14:contrast=1.50:saturation=0.78,vignette=PI/4",
   };
 
   Future<void> pick() async {
     await Permission.storage.request();
     var r = await FilePicker.platform.pickFiles(type: FileType.video);
     if (r!= null) {
+      timer?.cancel();
       pickedFile = File(r.files.single.path!);
       controller?.dispose();
       controller = VideoPlayerController.file(pickedFile!);
       await controller!.initialize();
       controller!.setLooping(true);
       controller!.play();
-      Timer.periodic(Duration(milliseconds: 200), (t) {
-        if (controller!= null && controller!.value.isInitialized) {
+      timer = Timer.periodic(Duration(milliseconds: 800), (t) {
+        if (controller!= null && controller!.value.isInitialized &&!processing && mounted) {
           var dur = controller!.value.duration.inMilliseconds;
           if (dur == 0) dur = 1;
           setState(() { progress = controller!.value.position.inMilliseconds / dur; });
         }
       });
-      setState(() => status = "Ready");
+      setState(() { status = selectedFilter + " Ready"; });
     }
-  }
-
-  List<double> getCombinedMatrix() {
-    List<double> base = [1,0,0,0,0, 0,1,0,0,0, 0,0,1,0,0, 0,0,0,1,0];
-    for (var name in selectedFilters) {
-      if (previewMatrix.containsKey(name)) {
-        var m = previewMatrix[name]!;
-        // simple add for preview
-        base[0] = base[0] * 0.5 + m[0] * 0.5 * (intensity/50);
-        base[4] = base[4] + m[4] * 0.6;
-        base[6] = base[6] * 0.5 + m[6] * 0.5;
-        base[9] = base[9] + m[9] * 0.6;
-        base[12] = base[12] * 0.5 + m[12] * 0.5;
-      }
-    }
-    return base;
   }
 
   String getFFmpeg() {
     double sharpVal = sharpen / 100 * 2.5;
-    bool isPortrait = true;
-    if (controller!= null) isPortrait = controller!.value.size.height > controller!.value.size.width;
-    String scale = isPortrait
-     ? "scale=1080:1920:force_original_aspect_ratio=decrease:flags=lanczos+accurate_rnd,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,scale=2160:3840:flags=lanczos"
-      : "scale=1920:1080:force_original_aspect_ratio=decrease:flags=lanczos+accurate_rnd,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,scale=3840:2160:flags=lanczos";
-
+    String scale = "scale=1080:1920:force_original_aspect_ratio=decrease:flags=lanczos,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=black,scale=2160:3840:flags=lanczos";
     String sharp = "unsharp=5:5:" + sharpVal.toString() + ":5:5:0";
-    List<String> parts = [];
-    for (var f in selectedFilters) {
-      if (ffmpegMap.containsKey(f)) parts.add(ffmpegMap[f]!);
-    }
-    String multi = parts.join(",");
-    String finalF = scale + "," + sharp;
-    if (multi.isNotEmpty) finalF = finalF + "," + multi;
-    finalF = finalF + ",unsharp=5:5:1.0:5:5:0,eq=contrast=1.05:saturation=1.05";
-    return finalF;
+    String base = ffmpegMap["BASE"]!;
+    String specific = ffmpegMap[selectedFilter]?? "eq=saturation=1.30:contrast=1.20";
+    return scale + "," + sharp + "," + base + "," + specific + ",unsharp=5:5:0.9:5:5:0";
   }
 
   Future<void> convert() async {
     if (pickedFile == null) return;
-    setState(() { processing = true; });
+    setState(() { processing = true; progress = 0.01; });
     FFmpegKitConfig.enableStatisticsCallback((s) {
-      double p = 0;
-      if (controller!= null) {
-        var dur = controller!.value.duration.inMilliseconds;
-        if (dur == 0) dur = 1;
-        p = s.getTime() / dur;
-      }
+      var dur = controller!.value.duration.inMilliseconds;
+      if (dur == 0) dur = 1;
+      double p = s.getTime() / dur;
       if (p > 0.99) p = 0.99;
-      if (p < 0) p = 0;
-      setState(() { progress = p; status = (p*100).toInt().toString() + "% SAVING " + selectedFilters.join("+"); });
+      if (mounted) setState(() { progress = p; status = (p*100).toInt().toString() + "% " + selectedFilter; });
     });
-
     Directory d = Directory("/storage/emulated/0/Movies/HATKE_4K");
     if (!await d.exists()) await d.create(recursive: true);
-    String out = d.path + "/CLEAR_" + DateTime.now().millisecondsSinceEpoch.toString() + ".mp4";
+    String out = d.path + "/REAL_" + selectedFilter.replaceAll(" ", "_") + "_" + DateTime.now().millisecondsSinceEpoch.toString() + ".mp4";
     String vf = getFFmpeg();
     String cmd = "-y -i '" + pickedFile!.path + "' -vf \"" + vf + "\" -c:v libx264 -preset medium -crf 18 -pix_fmt yuv420p -c:a copy '" + out + "'";
     var session = await FFmpegKit.execute(cmd);
     FFmpegKitConfig.enableStatisticsCallback(null);
     var rc = await session.getReturnCode();
     if (ReturnCode.isSuccess(rc)) {
-      setState(() { processing = false; status = "DONE! Saved - " + out; progress = 1.0; });
+      setState(() { processing = false; progress = 1; status = "DONE! " + out; });
     } else {
       setState(() { processing = false; status = "Failed"; });
     }
   }
 
+  @override void dispose() { timer?.cancel(); controller?.dispose(); super.dispose(); }
+
   @override
   Widget build(BuildContext context) {
-    List<double> mat = getCombinedMatrix();
+    List<double> mat = previewMatrix[selectedFilter]?? [1.15,0,0,0,10, 0,1.15,0,0,10, 0,0,1.20,0,12, 0,0,0,1,0];
     return Scaffold(
       backgroundColor: Color(0xFF0A0A0A),
-      appBar: AppBar(title: Text("HATKE REAL FILTER 4K", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)), backgroundColor: Colors.purple, toolbarHeight: 42),
+      appBar: AppBar(title: Text("HATKE ALL FILTERS WORKING", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)), backgroundColor: Colors.purple, toolbarHeight: 40),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(8),
-        child: Column(
-          children: [
-            SizedBox(height: 44, child: ElevatedButton(onPressed: processing? null : pick, style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.black, minimumSize: Size(double.infinity, 44)), child: Text("SELECT VIDEO", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)))),
-            SizedBox(height: 8),
-            if (controller!= null && controller!.value.isInitialized)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Stack(
-                  children: [
-                    AspectRatio(aspectRatio: controller!.value.aspectRatio, child: VideoPlayer(controller!)),
-                    // REAL FILTER PREVIEW - hach main fix
-                    Positioned.fill(
-                      child: ColorFiltered(
-                        colorFilter: ColorFilter.matrix(mat),
-                        child: AspectRatio(aspectRatio: controller!.value.aspectRatio, child: VideoPlayer(controller!)),
-                      ),
-                    ),
-                    Positioned(bottom: 6, left: 6, child: Container(padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4), color: Colors.yellow, child: Text(selectedFilters.join(" + "), style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold)))),
-                  ],
-                ),
-              ),
-            if (controller!= null) SizedBox(height: 6),
-            if (controller!= null) LinearProgressIndicator(value: progress, minHeight: 6, backgroundColor: Colors.white24, valueColor: AlwaysStoppedAnimation(Colors.yellow)),
+        padding: EdgeInsets.all(10),
+        child: Column(children: [
+          SizedBox(height: 50, child: ElevatedButton(onPressed: processing? null : pick, style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.black, minimumSize: Size(double.infinity, 50)), child: Text("SELECT VIDEO", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)))),
+          SizedBox(height: 10),
+          if (controller!= null && controller!.value.isInitialized)
+            Column(children: [
+              ClipRRect(borderRadius: BorderRadius.circular(12), child: ColorFiltered(colorFilter: ColorFilter.matrix(mat), child: AspectRatio(aspectRatio: controller!.value.aspectRatio, child: VideoPlayer(controller!)))),
+              SizedBox(height: 8),
+              Container(padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: Colors.yellow, borderRadius: BorderRadius.circular(6)), child: Text(selectedFilter + " @ " + intensity.toInt().toString() + "%", style: TextStyle(color: Colors.black, fontSize: 11, fontWeight: FontWeight.bold))),
+              SizedBox(height: 6),
+              ClipRRect(borderRadius: BorderRadius.circular(10), child: LinearProgressIndicator(value: progress, minHeight: 10, backgroundColor: Colors.white24, valueColor: AlwaysStoppedAnimation(Colors.yellow))),
+            ]),
+          SizedBox(height: 14),
+          SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: categories.keys.map((cat) { bool sel = cat == selectedCategory; return GestureDetector(onTap: () => setState(() => selectedCategory = cat), child: Container(margin: EdgeInsets.only(right: 10), padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14), decoration: BoxDecoration(color: sel? Colors.yellow : Color(0xFF222222), borderRadius: BorderRadius.circular(24)), child: Text(cat, style: TextStyle(color: sel? Colors.black : Colors.white, fontSize: 14, fontWeight: FontWeight.bold)))); }).toList())),
+          SizedBox(height: 12),
+          Container(width: double.infinity, padding: EdgeInsets.all(14), decoration: BoxDecoration(color: Color(0xFF151515), borderRadius: BorderRadius.circular(14)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text("Filter Tap = Real Apply - Motha Button", style: TextStyle(color: Colors.yellow, fontSize: 12, fontWeight: FontWeight.bold)),
             SizedBox(height: 12),
-            // Category - MOTHA KELA
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(children: categories.keys.map((cat) {
-                bool sel = cat == selectedCategory;
-                return GestureDetector(
-                  onTap: () => setState(() => selectedCategory = cat),
-                  child: Container(margin: EdgeInsets.only(right: 8), padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10), decoration: BoxDecoration(color: sel? Colors.yellow : Color(0xFF222222), borderRadius: BorderRadius.circular(20), border: Border.all(color: sel? Colors.white : Colors.transparent)), child: Text(cat, style: TextStyle(color: sel? Colors.black : Colors.white, fontSize: 12, fontWeight: FontWeight.bold))),
-                );
-              }).toList()),
-            ),
-            SizedBox(height: 10),
-            Container(
-              padding: EdgeInsets.all(10),
-              decoration: BoxDecoration(color: Color(0xFF151515), borderRadius: BorderRadius.circular(12)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("MULTI FILTER - Tap kara (Motha Button)", style: TextStyle(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8, runSpacing: 8,
-                    children: (categories[selectedCategory] as List).map((f) {
-                      bool sel = selectedFilters.contains(f);
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            if (sel) { if (selectedFilters.length > 1) selectedFilters.remove(f); } else { selectedFilters.add(f); }
-                          });
-                        },
-                        child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          decoration: BoxDecoration(color: sel? Colors.yellow : Color(0xFF2A2A2A), borderRadius: BorderRadius.circular(8), border: sel? Border.all(color: Colors.white, width: 2) : Border.all(color: Colors.white12)),
-                          child: Row(mainAxisSize: MainAxisSize.min, children: [
-                            if (sel) Icon(Icons.check_circle, size: 14, color: Colors.black),
-                            SizedBox(width: sel? 4 : 0),
-                            Text(f, style: TextStyle(color: sel? Colors.black : Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                          ]),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 10),
-            Container(
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(color: Color(0xFF151515), borderRadius: BorderRadius.circular(10)),
-              child: Column(children: [
-                Row(children: [SizedBox(width: 70, child: Text("Sharpness", style: TextStyle(color: Colors.white70, fontSize: 11))), Expanded(child: Slider(value: sharpen, min: 0, max: 100, activeColor: Colors.pink, inactiveColor: Colors.white24, onChanged: (v) => setState(() => sharpen = v)))]),
-                Row(children: [SizedBox(width: 70, child: Text("Intensity", style: TextStyle(color: Colors.white70, fontSize: 11))), Expanded(child: Slider(value: intensity, min: 0, max: 100, activeColor: Colors.yellow, inactiveColor: Colors.white24, onChanged: (v) => setState(() => intensity = v)))]),
-              ]),
-            ),
-            SizedBox(height: 10),
-            Text(status, style: TextStyle(color: Colors.white70, fontSize: 11), textAlign: TextAlign.center),
-            SizedBox(height: 10),
-            SizedBox(height: 50, child: ElevatedButton(onPressed: processing? null : convert, style: ElevatedButton.styleFrom(backgroundColor: Colors.yellow, foregroundColor: Colors.black, minimumSize: Size(double.infinity, 50)), child: Text(processing? "RENDERING..." : "EXPORT REAL CLEAR 4K - " + selectedFilters.join("+"), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)))),
-            SizedBox(height: 20),
-          ],
-        ),
+            Wrap(spacing: 10, runSpacing: 10, children: (categories[selectedCategory] as List).map((f) { bool sel = f == selectedFilter; return GestureDetector(onTap: () => setState(() { selectedFilter = f; status = f + " Applied"; }), child: Container(padding: EdgeInsets.symmetric(horizontal: 18, vertical: 14), decoration: BoxDecoration(color: sel? Colors.yellow : Color(0xFF2E2E2E), borderRadius: BorderRadius.circular(12), border: sel? Border.all(color: Colors.white, width: 3) : Border.all(color: Colors.white24, width: 1)), child: Text(f, style: TextStyle(color: sel? Colors.black : Colors.white, fontSize: 14, fontWeight: FontWeight.bold)))); }).toList()),
+          ])),
+          SizedBox(height: 12),
+          Text(status, style: TextStyle(color: Colors.white70, fontSize: 12), textAlign: TextAlign.center),
+          SizedBox(height: 12),
+          SizedBox(height: 56, child: ElevatedButton(onPressed: processing? null : convert, style: ElevatedButton.styleFrom(backgroundColor: Colors.yellow, foregroundColor: Colors.black, minimumSize: Size(double.infinity, 56)), child: Text(processing? "RENDERING..." : "EXPORT REAL - " + selectedFilter, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)))),
+          SizedBox(height: 25),
+        ]),
       ),
     );
   }
