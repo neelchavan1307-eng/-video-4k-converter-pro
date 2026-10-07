@@ -1,3 +1,11 @@
+name: video_4k_converter_pro
+description: HATKE - 70 Filters 4K AI
+publish_to: 'none'
+version: 1.0.0+7
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
 dependencies:
   flutter:
     sdk: flutter
@@ -8,3 +16,6 @@ dependencies:
   file_picker: ^8.0.0
   gal: ^2.3.0
   image: ^4.2.0
+
+flutter:
+  uses-material-design: true
