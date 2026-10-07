@@ -14,6 +14,10 @@ jobs:
           flutter-version: '3.22.2'
           channel: 'stable'
 
+      - name: Fix minSdk for FFmpeg
+        run: |
+          echo "flutter.minSdkVersion=24" >> android/local.properties
+
       - run: flutter clean
       - run: flutter pub get
       - run: flutter build apk --release --no-tree-shake-icons
