@@ -68,10 +68,8 @@ class _MergedAppState extends State<MergedApp> {
     if(!await d.exists()) await d.create(recursive:true);
     String out = "${d.path}/HATKE_CLEAR_${selectedFilter}_${DateTime.now().millisecondsSinceEpoch}.mp4";
 
-    double sharpVal = (sharpen + focusFilter)/100 * 2.5; // 2.5x jast sharp for real clarity
+    double sharpVal = (sharpen + focusFilter)/100 * 2.5;
     bool isPortrait = _c!.value.size.height > _c!.value.size.width;
-
-    // REAL 4K UPSCALE - 4x quality
     String scalePart = isPortrait? "scale=1080:1920:flags=lanczos+accurate_rnd+full_chroma_int:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=black,scale=2160:3840:flags=lanczos"
                                  : "scale=1920:1080:flags=lanczos+accurate_rnd+full_chroma_int:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,scale=3840:2160:flags=lanczos";
 
@@ -86,26 +84,22 @@ class _MergedAppState extends State<MergedApp> {
     else if(selectedFilter=="Lunar Night") newVf="eq=contrast=1.3:brightness=-0.08:saturation=0.7, colorbalance=bs=0.25:gm=0.1";
     else newVf="eq=contrast=${1.15+ii}:saturation=${1.2+ii}:brightness=${ii*0.05}";
 
-    // FINAL HIGH QUALITY FILTER
     String finalVf = "$scalePart,$oldVf,$newVf,unsharp=5:5:0.8:5:5:0";
-
-    // HIGH QUALITY EXPORT - crf 18 = ekdam clear, medium = slow but quality best
     String cmd = "-y -i '${pickedFile!.path}' -vf \"$finalVf\" -c:v libx264 -preset medium -crf 18 -pix_fmt yuv420p -c:a aac -b:a 192k '$out'";
 
     await FFmpegKit.execute(cmd).then((s) async {
       FFmpegKitConfig.enableStatisticsCallback(null);
       if(ReturnCode.isSuccess(await s.getReturnCode())){ setState((){ convertProgress=1.0; processing=false; status="DONE! Ekdam Clear Saved!\n$out"; }); }
-      else { setState((){ processing=false; status="Failed - log check kara"; }); }
+      else { setState((){ processing=false; status="Failed"; }); }
     });
   }
 
   Widget modeChip(String n, IconData ic, Color c){ bool sel=selectedMode==n; return GestureDetector(onTap: ()=>setState(()=>selectedMode=n), child: Container(padding: EdgeInsets.symmetric(horizontal:10,vertical:5), decoration: BoxDecoration(color: sel?c:Color(0xFF1E1E1E), borderRadius: BorderRadius.circular(15), border: Border.all(color: sel?Colors.white:c.withOpacity(0.6),width:0.8)), child: Row(mainAxisSize:MainAxisSize.min,children:[Icon(ic,size:10,color:Colors.white),SizedBox(width:3),Text(n,style:TextStyle(color:Colors.white,fontSize:9,fontWeight:FontWeight.bold))]))) ;}
 
-  // SLIDER SIZE 50% KAMI KELELA
   Widget miniSlider(String n, double v, Function(double) onC){
     return Padding(padding: EdgeInsets.only(bottom:2), child: Row(children:[
-      SizedBox(width:75,child: Text(n,style:TextStyle(color:Colors.white60,fontSize:8))),
-      Expanded(child: SliderTheme(data: SliderThemeData(trackHeight:1.5, thumbShape: RoundSliderThumbShape(enabledThumbRadius:4), overlayShape: RoundSliderOverlayShape(overlayRadius:8)), child: Slider(value:v,min:0,max:100,activeColor:Colors.pinkAccent,inactiveColor:Colors.white20, onChanged:(vv)=>setState(()=>onC(vv))))),
+      SizedBox(width:75,child: Text(n,style:TextStyle(color:Colors.white.withOpacity(0.6),fontSize:8))),
+      Expanded(child: SliderTheme(data: SliderThemeData(trackHeight:1.5, thumbShape: RoundSliderThumbShape(enabledThumbRadius:4), overlayShape: RoundSliderOverlayShape(overlayRadius:8)), child: Slider(value:v,min:0,max:100,activeColor:Colors.pinkAccent,inactiveColor:Colors.white.withOpacity(0.2), onChanged:(vv)=>setState(()=>onC(vv))))),
       SizedBox(width:22,child: Text("${v.toInt()}",style:TextStyle(color:Colors.pinkAccent,fontSize:8,fontWeight:FontWeight.bold)))
     ]));
   }
@@ -130,28 +124,4 @@ class _MergedAppState extends State<MergedApp> {
           Row(children:[
             SizedBox(height:26, child: ElevatedButton(onPressed: ()=>setState(()=>showComparison=!showComparison), style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF222222), padding:EdgeInsets.symmetric(horizontal:10)), child: Text(showComparison?"SINGLE":"COMPARE",style:TextStyle(fontSize:8)))),
             SizedBox(width:6),
-            Expanded(child: Container(height:26, padding:EdgeInsets.symmetric(horizontal:6), decoration: BoxDecoration(color:Color(0xFF1A1A1A),borderRadius: BorderRadius.circular(6)), child: Row(children:[Text("${intensity.toInt()}%",style:TextStyle(color:Colors.white60,fontSize:8)), Expanded(child: SliderTheme(data: SliderThemeData(trackHeight:1.5, thumbShape: RoundSliderThumbShape(enabledThumbRadius:4)), child: Slider(value:intensity,min:30,max:50,activeColor:Colors.yellow,inactiveColor:Colors.white20,onChanged:(v)=>setState(()=>intensity=v))))])))
-          ]),
-          Container(height:12, margin:EdgeInsets.only(top:4), decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color:Colors.white10), child: Stack(children:[FractionallySizedBox(widthFactor: (processing?convertProgress:previewProgress).clamp(0.0,1.0), child: Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), gradient: LinearGradient(colors: [Colors.purple,Colors.pink,Colors.orange,Colors.yellow])))), if(processing) Center(child: Text("${(convertProgress*100).toInt()}% ${selectedFilter}",style:TextStyle(color:Colors.white,fontSize:8,fontWeight:FontWeight.bold))) ])),
-        ],
-        SizedBox(height:6),
-        Text("OLD 3 MODES",style:TextStyle(color:Colors.white40,fontSize:8,fontWeight:FontWeight.bold)),
-        SizedBox(height:3),
-        Row(mainAxisAlignment:MainAxisAlignment.center, children:[modeChip("Devi Glow", Icons.auto_awesome, Colors.orange), SizedBox(width:5), modeChip("Cute Soft", Icons.favorite, Colors.pink), SizedBox(width:5), modeChip("Cyber Pop", Icons.bolt, Colors.cyan)]),
-        SizedBox(height:6),
-        Container(padding: EdgeInsets.all(6), decoration: BoxDecoration(color: Color(0xFF151515), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.white10,width:0.5)), child: Column(children:[ miniSlider("Focus", focusFilter, (v)=>focusFilter=v), miniSlider("4K Filter", fourKFilter, (v)=>fourKFilter=v), miniSlider("Even Skin", evenSkin, (v)=>evenSkin=v), miniSlider("Whitening", whitening, (v)=>whitening=v), miniSlider("Brilliance", brilliance, (v)=>brilliance=v), miniSlider("Sharpen", sharpen, (v)=>sharpen=v), ])),
-        SizedBox(height:6),
-        Text("NEW CAPCUT 5 CATEGORIES",style:TextStyle(color:Colors.yellow,fontSize:8,fontWeight:FontWeight.bold)),
-        SizedBox(height:3),
-        SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: categories.keys.map((cat){ bool sel=cat==selectedCategory; return GestureDetector(onTap: ()=>setState(()=>selectedCategory=cat), child: Container(margin:EdgeInsets.only(right:5), padding:EdgeInsets.symmetric(horizontal:10,vertical:4), decoration: BoxDecoration(color: sel?Colors.yellow:Color(0xFF1E1E1E), borderRadius: BorderRadius.circular(12)), child: Text(cat,style:TextStyle(color: sel?Colors.black:Colors.white60,fontSize:8,fontWeight:FontWeight.bold)))); }).toList())),
-        SizedBox(height:4),
-        Container(padding:EdgeInsets.all(6), decoration: BoxDecoration(color:Color(0xFF151515),borderRadius: BorderRadius.circular(8)), child: Wrap(spacing:4,runSpacing:4, children: categories[selectedCategory]!.map((f){ bool sel=f==selectedFilter; return GestureDetector(onTap: ()=>setState(()=>selectedFilter=f), child: Container(width: (MediaQuery.of(context).size.width-40)/3, padding:EdgeInsets.symmetric(vertical:6), decoration: BoxDecoration(color: sel?Colors.white:Color(0xFF2A2A2A), borderRadius: BorderRadius.circular(6), border: sel?Border.all(color:Colors.yellow,width:1.5):null), child: Column(children:[Icon(Icons.filter_vintage, size:12, color: sel?Colors.black:Colors.white40), SizedBox(height:2), Text(f, textAlign:TextAlign.center, style:TextStyle(color: sel?Colors.black:Colors.white60,fontSize:7,fontWeight:FontWeight.bold))]))) ;}).toList())),
-        SizedBox(height:6),
-        Text(status, style:TextStyle(color:Colors.white60,fontSize:9), textAlign: TextAlign.center),
-        SizedBox(height:6),
-        SizedBox(height:42, child: ElevatedButton(onPressed: processing?null:convert, style: ElevatedButton.styleFrom(backgroundColor: Colors.yellow, foregroundColor: Colors.black, minimumSize: Size(double.infinity,42)), child: Text(processing?"${(convertProgress*100).toInt()}% RENDERING":"EXPORT CLEAR ${selectedFilter.toUpperCase()} 4K",style:TextStyle(fontWeight:FontWeight.bold,fontSize:11)))),
-        SizedBox(height:15),
-      ])),
-    );
-  }
-}
+            Expanded(child: Container(height:26, padding:EdgeInsets.symmetric(horizontal:6), decoration: BoxDecoration(color:Color(0xFF1A1A1A),borderRadius: BorderRadius.circular(6)), child: Row(children:[Text("${intensity.toInt()}%",style:TextStyle(color:Colors.white.withOpacity(0.6),fontSize:8)), Expanded(child: SliderTheme(data: SliderThemeData(trackHeight:1.5, thumbShape: RoundSliderThumbShape(enabledThumbRadius:4)), child: Slider(value:intensity,min:30,max:50,activeColor:Colors.yellow,inactiveColor:Colors.white.withOpacity(0.2),onChanged:(v)=>setState(()=>intensity=v))))])))
