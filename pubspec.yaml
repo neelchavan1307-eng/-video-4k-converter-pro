@@ -1,7 +1,7 @@
 name: video_4k_converter_pro
-description: HATKE - 4K Filters Live
+description: HATKE - 70 Filters 4K
 publish_to: 'none'
-version: 1.0.0+5
+version: 1.0.0+6
 environment:
   sdk: '>=3.6.0 <4.0.0'
 dependencies:
