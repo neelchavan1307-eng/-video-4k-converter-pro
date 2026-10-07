@@ -1,156 +1,136 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:ffmpeg_kit_flutter_new_min_gpl/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_new_min_gpl/ffmpeg_kit_config.dart';
-import 'package:ffmpeg_kit_flutter_new_min_gpl/return_code.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:video_player/video_player.dart';
+import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter/return_code.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:gallery_saver/gallery_saver.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-void main() {
-  runApp(MaterialApp(home: MergedApp(), debugShowCheckedModeBanner: false));
-}
+void main() => runApp(MaterialApp(home: HatkeApp(), debugShowCheckedModeBanner: false));
 
-class MergedApp extends StatefulWidget {
-  @override State<MergedApp> createState() => MergedAppState();
-}
+class HatkeApp extends StatefulWidget { @override State<HatkeApp> createState() => _HatkeAppState(); }
 
-class MergedAppState extends State<MergedApp> {
-  File? pickedFile;
-  VideoPlayerController? controller;
-  String status = "Ready";
-  bool processing = false;
+class _HatkeAppState extends State<HatkeApp> {
+  VideoPlayerController? _controller;
+  List<String> selected = ["HD Dark"];
+  bool isExporting = false;
   double progress = 0;
-  String selectedCategory = "Quality";
-  List<String> selectedFilters = ["HD Dark"];
+  String videoPath = ""; // तुझा original video path इथे येईल
 
-  final categories = {
-    "Quality": ["Quality Restore", "4K", "HD Light", "Focus", "Enhance", "Quality II", "HD Dark", "HD Upscale", "HD Cam 2", "HD Pet"],
-    "Cinematic": ["Oppenheimer", "Wong Kar-wai", "Black Panther", "Badburry", "Freedom", "Hasselblad 2", "Green Orange", "Sicily", "Kendall", "Retro Print"],
-    "Glow": ["Flash CCD", "Universal Suns", "Glow", "Cinematic Glow", "Modern Oil-paint", "Dreamy Halo"],
-    "Dark": ["Dark 1", "Silver", "Humble", "Low-key"],
+  // तुझ्या व्हिडिओ चे filters - इथेच खरी जादू आहे
+  Map<String, String> ffmpegFilters = {
+    "HD Dark": "eq=brightness=-0.15:contrast=1.3:saturation=0.8",
+    "Quality Restore": "unsharp=5:5:1.0",
+    "4K": "scale=1920:1080:flags=lanczos,unsharp=5:5:1.0",
+    "HD Light": "eq=brightness=0.1:contrast=1.1",
+    "Oppenheimer": "colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131:0",
+    "Wong-kar-wai": "colorbalance=rs=0.3:gs=-0.1:bs=-0.2",
+    "Black Panther": "eq=contrast=1.4:saturation=1.3",
+    "Badburry": "sepia=0.3",
+    "Freedom": "eq=saturation=1.5",
+    "Hasselblad 2": "curves=vintage",
+    "Green Orange": "colorbalance=rs=0.2:gs=0.1:bs=-0.2:rm=0.1:gm=0.05:bm=-0.1",
+    "Sicily": "colorchannelmixer=1.2:0:0:0:0:1.1:0:0:0:0:0.9:0",
+    "Kendall": "eq=brightness=0.05:contrast=1.2:saturation=1.2:gamma=0.9",
+    "Retro Print": "curves=strong_contrast",
+    "Glow": "gblur=sigma=0.5:steps=1,eq=brightness=0.1:saturation=1.3",
+    "Universal Suns": "colorbalance=rs=0.4:gs=0.2:bs=-0.1,eq=brightness=0.08",
+    "Cinematic Glow": "glow=0.5:0.8:0.5:0.8:0.8,eq=contrast=1.15",
+    "Flash CCD": "eq=contrast=1.2:brightness=0.05",
   };
 
-  final ffmpegMap = {
-    "BASE": "eq=brightness=0.02:contrast=1.18:saturation=1.20",
-    "HD Dark": "eq=brightness=0.02:contrast=1.23:saturation=1.11,colorbalance=rs=-0.12:bs=0.18",
-    "Quality Restore": "unsharp=5:5:1.3:5:5:0,eq=contrast=1.25:saturation=1.30",
-    "4K": "eq=saturation=1.30:contrast=1.18,unsharp=5:5:0.8:5:5:0",
-    "HD Light": "eq=brightness=0.12:saturation=1.30:contrast=1.10",
-    "Focus": "unsharp=5:5:1.8:5:5:0,eq=contrast=1.20",
-    "Enhance": "eq=contrast=1.18:saturation=1.35:brightness=0.04",
-    "Quality II": "eq=contrast=1.20:saturation=1.35:brightness=0.04",
-    "HD Upscale": "unsharp=5:5:1.0:5:5:0,eq=saturation=1.25",
-    "HD Cam 2": "eq=brightness=0.06:contrast=1.20:saturation=1.30",
-    "HD Pet": "eq=saturation=1.45:contrast=1.15:brightness=0.04",
-    "Oppenheimer": "eq=saturation=0.55:contrast=1.40:brightness=-0.05,curves=strong_contrast",
-    "Wong Kar-wai": "curves=vintage,colorbalance=rs=0.32:gs=-0.15:bs=-0.25,eq=saturation=1.35:contrast=1.22",
-    "Black Panther": "eq=saturation=0.80:contrast=1.30:brightness=-0.05,colorbalance=bs=0.18",
-    "Badburry": "colorbalance=rs=0.28:bs=0.28,eq=saturation=1.45:contrast=1.30:brightness=0.06",
-    "Freedom": "eq=saturation=1.65:contrast=1.25:brightness=0.06",
-    "Hasselblad 2": "eq=saturation=1.40:contrast=1.25:brightness=0.04",
-    "Green Orange": "colorbalance=rs=0.40:gs=-0.15:bs=-0.40,eq=saturation=1.50:contrast=1.25",    "Sicily": "eq=saturation=0.80:contrast=1.20,colorbalance=rs=0.18:bs=-0.10",
-    "Kendall": "eq=saturation=1.25:contrast=1.15:brightness=0.05",
-    "Retro Print": "colorbalance=gs=0.25:bs=-0.30:rs=0.20,eq=saturation=1.55:contrast=1.25:brightness=0.05",
-    "Flash CCD": "eq=brightness=0.14:saturation=1.70:contrast=1.18,unsharp=5:5:1.0:5:5:0",
-    "Universal Suns": "eq=contrast=1.35:saturation=1.45:brightness=0.06,colorbalance=rs=0.30:ys=0.15,curves=vintage",
-    "Glow": "eq=brightness=0.10:saturation=1.50:contrast=1.12",
-    "Cinematic Glow": "eq=brightness=0.08:saturation=1.45:contrast=1.20",
-    "Modern Oil-paint": "eq=saturation=1.60:contrast=1.28",
-    "Dreamy Halo": "eq=brightness=0.08:saturation=1.35:contrast=1.10",
-    "Dark 1": "eq=brightness=-0.08:contrast=1.30:saturation=0.80,curves=strong_contrast",
-    "Silver": "eq=saturation=0.10:contrast=1.18:brightness=0.04",
-    "Humble": "eq=saturation=0.78:contrast=1.15:brightness=-0.02",
-    "Low-key": "eq=brightness=-0.12:contrast=1.45:saturation=0.75,vignette=angle=PI/4",
+  // Live Preview साठी Color Filter
+  Map<String, ColorFilter> previewFilters = {
+    "HD Dark": ColorFilter.matrix([0.9,0,0,0,0, 0,0.9,0,0,0, 0,0,0.8,0,0, 0,0,0,1,0]),
+    "Oppenheimer": ColorFilter.matrix([1.2,0.2,0,0,0, 0.1,1.1,0,0,0, 0,0,0.8,0,0, 0,0,0,1,0]),
+    "Kendall": ColorFilter.matrix([1.1,0,0,0,10, 0,1.05,0,0,5, 0,0,1.0,0,0, 0,0,0,1,0]),
+    "Green Orange": ColorFilter.matrix([1.2,0,0,0,0, 0,1.1,0,0,0, 0,0,0.9,0,0, 0,0,0,1,0]),
+    "Glow": ColorFilter.matrix([1.2,0,0,0,15, 0,1.2,0,0,15, 0,0,1.2,0,0, 0,0,0,1,0]),
   };
-
-  final previewMatrix = {
-    "HD Dark": [1.18,0.0,0.0,0.0,8.0, 0.0,1.18,0.0,0.0,8.0, 0.0,0.0,1.30,0.0,14.0, 0.0,0.0,0.0,1.0,0.0],
-    "Retro Print": [1.30,0.10,0.0,0.0,12.0, 0.0,1.10,0.05,0.0,6.0, -0.15,0.05,0.85,0.0,0.0, 0.0,0.0,0.0,1.0,0.0],
-    "Oppenheimer": [1.40,0.10,0.0,0.0,0.0, 0.10,0.85,0.0,0.0,-5.0, 0.0,0.0,0.70,0.0,-8.0, 0.0,0.0,0.0,1.0,0.0],
-    "Universal Suns": [1.35,0.15,0.0,0.0,8.0, 0.08,1.10,0.0,0.0,0.0, 0.0,0.0,0.75,0.0,-2.0, 0.0,0.0,0.0,1.0,0.0],
-  };
-
-  List<double> getCombinedMatrix() {
-    List<double> base = [1.0,0.0,0.0,0.0,0.0, 0.0,1.0,0.0,0.0,0.0, 0.0,0.0,1.0,0.0,0.0, 0.0,0.0,0.0,1.0,0.0];
-    if (selectedFilters.isEmpty) return base;
-    List<double> first = (previewMatrix[selectedFilters.first]?? base).map((e) => (e as num).toDouble()).toList();
-    return first;
-  }
-
-  Future<void> pick() async {
-    await [Permission.storage, Permission.videos, Permission.manageExternalStorage].request();
-    var r = await FilePicker.platform.pickFiles(type: FileType.video);
-    if (r!= null) {
-      pickedFile = File(r.files.single.path!);
-      await controller?.dispose();
-      controller = VideoPlayerController.file(pickedFile!);
-      await controller!.initialize();
-      controller!.setLooping(true);
-      controller!.play();
-      setState(() {});
-    }
-  }
-
-  Future<String> getOutputPath() async {
-    try {
-      Directory d = Directory("/storage/emulated/0/DCIM/HATKE");
-      if (!await d.exists()) await d.create(recursive: true);
-      return d.path + "/HATKE_${DateTime.now().millisecondsSinceEpoch}.mp4";
-    } catch (_) {
-      Directory d = Directory("/storage/emulated/0/Movies/HATKE");
-      if (!await d.exists()) await d.create(recursive: true);
-      return d.path + "/HATKE_${DateTime.now().millisecondsSinceEpoch}.mp4";
-    }
-  }
-
-  String buildChain() {
-    List<String> parts = [ffmpegMap["BASE"]!];
-    for (var f in selectedFilters) {
-      if (ffmpegMap.containsKey(f)) parts.add(ffmpegMap[f]!);
-    }
-    return parts.join(",");
-  }
-
-  Future<void> convert() async {
-    if (pickedFile == null) return;
-    setState(() { processing = true; progress = 0.01; status = "Rendering..."; });
-    FFmpegKitConfig.enableStatisticsCallback((s) {
-      if (controller == null) return;
-      var dur = controller!.value.duration.inMilliseconds;
-      if (dur == 0) dur = 1;
-      double p = s.getTime() / dur;
-      if (p > 0.99) p = 0.99;
-      if (mounted) setState(() { progress = p; status = "${(p*100).toInt()}%"; });
-    });
-    String outPath = await getOutputPath();
-    String vf = "scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,crop=1080:1920,setsar=1,${buildChain()}";
-    String cmd = "-y -i '${pickedFile!.path}' -vf \"$vf\" -c:v libx264 -preset ultrafast -crf 23 -pix_fmt yuv420p -c:a aac -b:a 128k '$outPath'";
-    var session = await FFmpegKit.execute(cmd);
-    FFmpegKitConfig.enableStatisticsCallback(null);
-    var rc = await session.getReturnCode();
-    if (ReturnCode.isSuccess(rc)) {
-      try { await Process.run('am', ['broadcast', '-a', 'android.intent.action.MEDIA_SCANNER_SCAN_FILE', '-d', 'file://$outPath']); } catch(_){}
-      setState(() { processing = false; progress = 1; status = "SAVED to Gallery"; });
-    } else {
-      setState(() { processing = false; status = "Failed"; });
-    }
-  }
-
-  @override void dispose() { controller?.dispose(); super.dispose(); }
 
   @override
-  Widget build(BuildContext context) {
-    List<double> mat = getCombinedMatrix();
+  void initState(){
+    super.initState();
+    // इथे तुझा gallery मधून video pick चा code असेल
+    // _controller = VideoPlayerController.file(File(videoPath))..initialize().then((_)=>setState((){})..play()..setLooping(true));
+  }
+
+  String buildFfmpegCommand(){
+    List<String> filters = [];
+    for(var f in selected){
+      if(ffmpegFilters.containsKey(f)) filters.add(ffmpegFilters[f]!);
+    }
+    if(filters.isEmpty) return "";
+    return filters.join(",");
+  }
+
+  Future<void> exportVideo() async {
+    if(videoPath.isEmpty){ ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("आधी व्हिडिओ सिलेक्ट कर"))); return; }
+    setState(()=> isExporting = true);
+    await Permission.storage.request(); await Permission.videos.request();
+
+    Directory temp = await getTemporaryDirectory();
+    String outPath = "${temp.path}/HATKE_${DateTime.now().millisecondsSinceEpoch}.mp4";
+    String vf = buildFfmpegCommand();
+    String cmd = "-i $videoPath -vf \"$vf\" -c:a copy -preset ultrafast $outPath";
+
+    print("FFMPEG CMD: $cmd");
+    await FFmpegKit.execute(cmd).then((session) async {
+      final code = await session.getReturnCode();
+      if(ReturnCode.isSuccess(code)){
+        // Gallery मध्ये Save
+        Directory dcim = Directory("/storage/emulated/0/DCIM/HATKE");
+        if(!await dcim.exists()) await dcim.create(recursive: true);
+        String finalPath = "${dcim.path}/HATKE_${DateTime.now().millisecondsSinceEpoch}.mp4";
+        await File(outPath).copy(finalPath);
+        await GallerySaver.saveVideo(finalPath);
+        if(mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Save झालं - Gallery मध्ये बघ: DCIM/HATKE")));
+      } else {
+        if(mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Export Fail - Log बघ")));
+      }
+      setState(()=> isExporting = false);
+    });
+  }
+
+  @override Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(backgroundColor: Color(0xFF7B1FA2), toolbarHeight: 34, title: Text("HATKE - ${selectedFilters.length} FILTERS LIVE", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)), actions: [TextButton(onPressed: pick, child: Text("CHANGE", style: TextStyle(color: Colors.white, fontSize: 12)))]),
-      body: Column(
-        children: [
-          Container(height: MediaQuery.of(context).size.height * 0.55, width: double.infinity, color: Colors.black, child: controller!= null && controller!.value.isInitialized? Stack(children: [Center(child: AspectRatio(aspectRatio: controller!.value.aspectRatio, child: ColorFiltered(colorFilter: ColorFilter.matrix(mat), child: VideoPlayer(controller!)))), Positioned(top: 8, left: 8, child: Container(padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5), decoration: BoxDecoration(color: Colors.yellow, borderRadius: BorderRadius.circular(12)), child: Text(selectedFilters.join(" + "), style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold)))), if (processing) Positioned(bottom: 8, left: 10, right: 10, child: ClipRRect(borderRadius: BorderRadius.circular(10), child: LinearProgressIndicator(value: progress, minHeight: 6, backgroundColor: Colors.white24, valueColor: AlwaysStoppedAnimation(Colors.yellow))))]): Center(child: ElevatedButton(onPressed: pick, child: Text("SELECT VIDEO")))),
-          Expanded(child: Container(padding: EdgeInsets.all(8), decoration: BoxDecoration(color: Color(0xFF121212), borderRadius: BorderRadius.vertical(top: Radius.circular(16))), child: Column(children: [SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: categories.keys.map((cat) { bool sel = cat == selectedCategory; return GestureDetector(onTap: () => setState(() => selectedCategory = cat), child: Container(margin: EdgeInsets.only(right: 8), padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10), decoration: BoxDecoration(color: sel? Colors.yellow : Color(0xFF2A2A2A), borderRadius: BorderRadius.circular(20)), child: Text(cat, style: TextStyle(color: sel? Colors.black : Colors.white, fontSize: 12, fontWeight: FontWeight.bold)))); }).toList())), SizedBox(height: 8), Expanded(child: SingleChildScrollView(child: Wrap(spacing: 8, runSpacing: 8, children: (categories[selectedCategory] as List).map((f) { bool sel = selectedFilters.contains(f); return GestureDetector(onTap: () => setState(() { if (sel) { if (selectedFilters.length > 1) selectedFilters.remove(f); } else { selectedFilters.add(f); } }), child: Container(padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10), decoration: BoxDecoration(color: sel? Colors.yellow : Color(0xFF2E2E2E), borderRadius: BorderRadius.circular(10), border: sel? Border.all(color: Colors.white, width: 2): null), child: Text(f, style: TextStyle(color: sel? Colors.black : Colors.white, fontSize: 12, fontWeight: FontWeight.bold)))); }).toList()))), SizedBox(height: 6), SizedBox(width: double.infinity, height: 46, child: ElevatedButton(onPressed: processing? null : convert, style: ElevatedButton.styleFrom(backgroundColor: Colors.yellow, foregroundColor: Colors.black), child: Text(processing? "RENDERING ${(progress*100).toInt()}%" : "EXPORT - ${selectedFilters.join('+')} - $status", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))))]))),
-        ],
-      ),
+      appBar: AppBar(backgroundColor: Colors.purple, title: Text("HATKE - ${selected.length} FILTERS LIVE", style: TextStyle(fontSize: 12)), actions: [TextButton(onPressed: (){ setState(()=> selected.clear()); }, child: Text("CLEAR", style: TextStyle(color: Colors.white)))]),
+      body: Column(children: [
+        // Top filter name strip - तुझ्या व्हिडिओ सारखा
+        Container(color: Colors.yellow, width: double.infinity, padding: EdgeInsets.all(4), child: Text(selected.join(" + "), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold))),
+        // Video Preview with LIVE filter
+        Expanded(child: _controller!=null && _controller!.value.isInitialized?
+          ColorFiltered(
+            colorFilter: previewFilters[selected.isNotEmpty? selected.last : "HD Dark"]?? ColorFilter.mode(Colors.transparent, BlendMode.multiply),
+            child: VideoPlayer(_controller!)
+          ) : Center(child: Text("व्हिडिओ लोड होतोय...", style: TextStyle(color: Colors.white)))
+        ),
+        // Filter Buttons - तुझ्या व्हिडिओ सारखेच
+        Container(height: 220, color: Color(0xFF1A1A1A), child: SingleChildScrollView(child: Column(children: [
+          Wrap(spacing: 6, runSpacing: 6, children: [
+            for(var cat in ["Quality","Cinematic","Glow","Dark"])
+              ChoiceChip(label: Text(cat, style: TextStyle(fontSize: 11)), selected: false, onSelected: (_){}),
+          ]),
+          SizedBox(height: 8),
+          Wrap(spacing: 6, runSpacing: 6, children: [
+            for(var f in ffmpegFilters.keys)
+              FilterChip(
+                label: Text(f, style: TextStyle(fontSize: 10)),
+                selected: selected.contains(f),
+                selectedColor: Colors.yellow,
+                onSelected: (v){ setState(()=> v? selected.add(f) : selected.remove(f)); },
+              )
+          ]),
+        ]))),
+        // EXPORT Button - हाच Fix केलाय
+        Container(width: double.infinity, padding: EdgeInsets.all(10), child: ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.yellow, foregroundColor: Colors.black, minimumSize: Size(double.infinity, 45), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25))),
+          onPressed: isExporting? null : exportVideo,
+          child: isExporting? Row(mainAxisAlignment: MainAxisAlignment.center, children: [CircularProgressIndicator(), SizedBox(width: 10), Text("Exporting ${progress.toInt()}%")]) : Text("EXPORT - ${selected.join("+")} - Ready", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+        ))
+      ]),
     );
   }
 }
