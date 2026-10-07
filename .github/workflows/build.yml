@@ -16,8 +16,7 @@ jobs:
       - run: rm -rf android pubspec.lock
       - run: flutter create . --platforms=android --project-name video_4k_converter_pro
       - run: echo "flutter.minSdkVersion=24" >> android/local.properties
-      - run: flutter clean
-      - run: flutter pub get
+      - run: flutter clean && flutter pub get
       - run: flutter build apk --release --no-tree-shake-icons
       - uses: actions/upload-artifact@v4
         with:
