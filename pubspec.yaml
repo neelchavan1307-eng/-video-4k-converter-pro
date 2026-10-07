@@ -1,14 +1,14 @@
 name: video_4k_converter_pro
 description: HATKE - 4K Filters Live
 publish_to: 'none'
-version: 1.0.0+4
+version: 1.0.0+5
 environment:
   sdk: '>=3.6.0 <4.0.0'
 dependencies:
   flutter:
     sdk: flutter
   video_player: ^2.8.2
-  ffmpeg_kit_flutter_new: ^1.0.0
+  ffmpeg_kit_flutter_new: ^1.0.1
   path_provider: ^2.1.2
   permission_handler: ^11.3.0
   file_picker: ^8.0.0
