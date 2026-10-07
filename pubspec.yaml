@@ -1,20 +1,8 @@
-name: video_4k_converter_pro
-description: 4K Clear Pro - Real FFmpeg - Divine Mode
-publish_to: 'none'
-version: 1.0.0+1
-
-environment:
-  sdk: '>=3.0.0 <4.0.0'
-
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.6
-  file_picker: ^8.1.0
   video_player: ^2.8.2
+  ffmpeg_kit_flutter: ^6.0.3
   path_provider: ^2.1.2
-  permission_handler: ^11.3.1
-  ffmpeg_kit_flutter_new_min_gpl: ^2.6.7
-
-flutter:
-  uses-material-design: true
+  gallery_saver: ^2.3.2
+  permission_handler: ^11.3.0
