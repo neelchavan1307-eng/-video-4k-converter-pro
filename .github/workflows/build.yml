@@ -16,7 +16,7 @@ jobs:
 
       - run: flutter clean
       - run: rm -rf android
-      - run: flutter create --platforms=android.
+      - run: flutter create --platforms=android .
       - run: flutter pub get
 
       - name: Fix minSdk for FFmpeg
