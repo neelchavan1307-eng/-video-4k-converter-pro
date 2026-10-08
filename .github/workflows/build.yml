@@ -7,25 +7,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '17'
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.27.4'
-          channel: 'stable'
-
       - run: flutter clean
       - run: rm -rf android
-      - run: flutter create --platforms=android .
+      - run: flutter create --platforms=android --project-name video_4k_converter_pro.
       - run: flutter pub get
-
-      - name: Fix minSdk for FFmpeg
-        run: |
-          echo "flutter.minSdkVersion=24" >> android/local.properties
-          echo "flutter.targetSdkVersion=34" >> android/local.properties
-
+      - run: echo "flutter.minSdkVersion=24" >> android/local.properties
       - run: flutter build apk --release --no-tree-shake-icons
-
       - uses: actions/upload-artifact@v4
         with:
           name: release-apk
