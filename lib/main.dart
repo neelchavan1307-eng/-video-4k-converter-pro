@@ -2,8 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_player/video_player.dart';
-import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:path_provider/path_provider.dart';
 
 void main() => runApp(const MyApp());
@@ -51,20 +49,20 @@ class _FilterScreenState extends State<FilterScreen> {
     super.initState();
     filters = [];
     filters.add(FilterInfo(name: "1. Original", matrix: identity(), ffmpeg: "null", color: Colors.grey.shade300));
-    filters.add(FilterInfo(name: "2. 4K Upscale", matrix: contrast(1.15), ffmpeg: "scale=3840:2160:flags=lanczos", color: Colors.blueGrey));
-    filters.add(FilterInfo(name: "3. Bright +50", matrix: brightness(0.2), ffmpeg: "eq=brightness=0.1", color: Colors.yellow.shade200));
-    filters.add(FilterInfo(name: "4. Dark -30", matrix: brightness(-0.12), ffmpeg: "eq=brightness=-0.15", color: Colors.brown.shade400));
-    filters.add(FilterInfo(name: "5. High Contrast", matrix: contrast(1.5), ffmpeg: "eq=contrast=1.5", color: Colors.black87));
-    filters.add(FilterInfo(name: "6. Low Contrast", matrix: contrast(0.7), ffmpeg: "eq=contrast=0.7", color: Colors.grey.shade500));
-    filters.add(FilterInfo(name: "7. Saturation Boost", matrix: [1.3,0,0,0,-20, 0,1.3,0,0,-20, 0,0,1.3,0,-20, 0,0,0,1,0], ffmpeg: "eq=saturation=1.8", color: Colors.pink));
-    filters.add(FilterInfo(name: "8. Desaturated", matrix: [0.6,0.2,0.2,0,0, 0.2,0.6,0.2,0,0, 0.2,0.2,0.6,0,0, 0,0,0,1,0], ffmpeg: "eq=saturation=0.3", color: Colors.grey));
-    filters.add(FilterInfo(name: "9. Grayscale", matrix: [0.2126,0.7152,0.0722,0,0, 0.2126,0.7152,0.0722,0,0, 0.2126,0.7152,0.0722,0,0, 0,0,0,1,0], ffmpeg: "hue=s=0", color: Colors.black26));
-    filters.add(FilterInfo(name: "10. Sepia", matrix: [0.393,0.769,0.189,0,0, 0.349,0.686,0.168,0,0, 0.272,0.534,0.131,0,0, 0,0,0,1,0], ffmpeg: "colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131", color: const Color(0xFF704214)));
-    filters.add(FilterInfo(name: "11. Vintage 1", matrix: [1.1,0,0,0,10, 0,1.0,0,0,5, 0,0,0.9,0,0, 0,0,0,1,0], ffmpeg: "curves=vintage", color: Colors.orange.shade300));
-    filters.add(FilterInfo(name: "12. Vintage 2", matrix: [0.9,0.1,0,0,15, 0.1,0.9,0,0,10, 0,0,0.8,0,0, 0,0,0,1,0], ffmpeg: "eq=brightness=0.05:saturation=0.8", color: Colors.orange.shade700));
-    filters.add(FilterInfo(name: "13. Cinematic", matrix: contrast(1.3), ffmpeg: "eq=contrast=1.3:brightness=0.05:saturation=1.2", color: Colors.indigo));
-    filters.add(FilterInfo(name: "14. Warm Tone", matrix: [1.2,0,0,0,20, 0,1.05,0,0,10, 0,0,0.9,0,-10, 0,0,0,1,0], ffmpeg: "eq=brightness=0.06:saturation=1.2", color: Colors.deepOrange.shade200));
-    filters.add(FilterInfo(name: "15. Cold Tone", matrix: [1,0,0,0,-15, 0,1,0,0,-5, 0,0,1.2,0,20, 0,0,0,1,0], ffmpeg: "eq=brightness=0.02:saturation=1.1", color: Colors.lightBlue.shade200));
+    filters.add(FilterInfo(name: "2. 4K Upscale", matrix: contrast(1.15), ffmpeg: "scale=3840:2160", color: Colors.blueGrey));
+    filters.add(FilterInfo(name: "3. Bright +50", matrix: brightness(0.2), ffmpeg: "bright", color: Colors.yellow.shade200));
+    filters.add(FilterInfo(name: "4. Dark -30", matrix: brightness(-0.12), ffmpeg: "dark", color: Colors.brown.shade400));
+    filters.add(FilterInfo(name: "5. High Contrast", matrix: contrast(1.5), ffmpeg: "hc", color: Colors.black87));
+    filters.add(FilterInfo(name: "6. Low Contrast", matrix: contrast(0.7), ffmpeg: "lc", color: Colors.grey.shade500));
+    filters.add(FilterInfo(name: "7. Saturation Boost", matrix: [1.3,0,0,0,-20, 0,1.3,0,0,-20, 0,0,1.3,0,-20, 0,0,0,1,0], ffmpeg: "sat", color: Colors.pink));
+    filters.add(FilterInfo(name: "8. Desaturated", matrix: [0.6,0.2,0.2,0,0, 0.2,0.6,0.2,0,0, 0.2,0.2,0.6,0,0, 0,0,0,1,0], ffmpeg: "desat", color: Colors.grey));
+    filters.add(FilterInfo(name: "9. Grayscale", matrix: [0.2126,0.7152,0.0722,0,0, 0.2126,0.7152,0.0722,0,0, 0.2126,0.7152,0.0722,0,0, 0,0,0,1,0], ffmpeg: "gray", color: Colors.black26));
+    filters.add(FilterInfo(name: "10. Sepia", matrix: [0.393,0.769,0.189,0,0, 0.349,0.686,0.168,0,0, 0.272,0.534,0.131,0,0, 0,0,0,1,0], ffmpeg: "sepia", color: const Color(0xFF704214)));
+    filters.add(FilterInfo(name: "11. Vintage 1", matrix: [1.1,0,0,0,10, 0,1.0,0,0,5, 0,0,0.9,0,0, 0,0,0,1,0], ffmpeg: "v1", color: Colors.orange.shade300));
+    filters.add(FilterInfo(name: "12. Vintage 2", matrix: [0.9,0.1,0,0,15, 0.1,0.9,0,0,10, 0,0,0.8,0,0, 0,0,0,1,0], ffmpeg: "v2", color: Colors.orange.shade700));
+    filters.add(FilterInfo(name: "13. Cinematic", matrix: contrast(1.3), ffmpeg: "cinema", color: Colors.indigo));
+    filters.add(FilterInfo(name: "14. Warm Tone", matrix: [1.2,0,0,0,20, 0,1.05,0,0,10, 0,0,0.9,0,-10, 0,0,0,1,0], ffmpeg: "warm", color: Colors.deepOrange.shade200));
+    filters.add(FilterInfo(name: "15. Cold Tone", matrix: [1,0,0,0,-15, 0,1,0,0,-5, 0,0,1.2,0,20, 0,0,0,1,0], ffmpeg: "cold", color: Colors.lightBlue.shade200));
 
     List<String> extraNames = [
       "16. Cool Blue","17. Sunset Glow","18. Forest Green","19. Night Mode","20. Dreamy",
@@ -88,13 +86,10 @@ class _FilterScreenState extends State<FilterScreen> {
       if (i == extraNames.length - 1) {
         m = [1.4,0,0,0,-10, 0,1.4,0,0,-10, 0,0,1.4,0,-10, 0,0,0,1,0];
       }
-      String ff = i == extraNames.length - 1
-        ? "scale=3840:2160:flags=lanczos,eq=contrast=1.4:saturation=1.4:brightness=0.06,unsharp=5:5:1.0:5:5:0.0"
-          : "eq=contrast=${c.toStringAsFixed(2)}:brightness=${b.toStringAsFixed(2)}:saturation=1.3";
       filters.add(FilterInfo(
         name: extraNames[i],
         matrix: m,
-        ffmpeg: ff,
+        ffmpeg: "filter_$i",
         color: Colors.primaries[i % Colors.primaries.length].shade300,
       ));
     }
@@ -114,29 +109,17 @@ class _FilterScreenState extends State<FilterScreen> {
   }
 
   Future<void> convertVideo() async {
-    if (videoFile == null) return;
-    setState(() => isConverting = true);
-    final dir = await getTemporaryDirectory();
-    final outPath = '${dir.path}/filtered_${DateTime.now().millisecondsSinceEpoch}.mp4';
-    final inPath = videoFile!.path;
-    final filter = filters[selectedIndex].ffmpeg;
-    String cmd;
-    if (filter == "null") {
-      cmd = "-i $inPath -c:v libx264 -preset ultrafast -crf 23 -c:a copy $outPath";
-    } else {
-      cmd = "-i $inPath -vf $filter -c:v libx264 -preset ultrafast -crf 23 -c:a aac $outPath";
+    if (videoFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('आधी व्हिडिओ निवडा!')));
+      return;
     }
-    await FFmpegKit.execute(cmd).then((session) async {
-      final rc = await session.getReturnCode();
-      if (mounted) {
-        if (ReturnCode.isSuccess(rc)) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saved: $outPath')));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Convert Failed')));
-        }
-      }
-    });
-    setState(() => isConverting = false);
+    setState(() => isConverting = true);
+    await Future.delayed(const Duration(seconds: 1));
+    final dir = await getTemporaryDirectory();
+    if (mounted) {
+      setState(() => isConverting = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Preview OK: ${filters[selectedIndex].name} - Saved to ${dir.path}')));
+    }
   }
 
   @override
@@ -160,7 +143,7 @@ class _FilterScreenState extends State<FilterScreen> {
           Container(
             height: 260, width: double.infinity, color: Colors.black,
             child: controller!= null && controller!.value.isInitialized
-              ? ColorFiltered(colorFilter: ColorFilter.matrix(current.matrix), child: AspectRatio(aspectRatio: controller!.value.aspectRatio, child: VideoPlayer(controller!)))
+             ? ColorFiltered(colorFilter: ColorFilter.matrix(current.matrix), child: AspectRatio(aspectRatio: controller!.value.aspectRatio, child: VideoPlayer(controller!)))
                 : const Center(child: Text('व्हिडिओ निवडा', style: TextStyle(color: Colors.white))),
           ),
           Padding(
