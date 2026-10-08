@@ -15,14 +15,14 @@ jobs:
           channel: 'stable'
 
       - run: flutter clean
+      - run: rm -rf android
+      - run: flutter create --platforms=android.
       - run: flutter pub get
 
       - name: Fix minSdk for FFmpeg
         run: |
-          mkdir -p android
-          touch android/local.properties
           echo "flutter.minSdkVersion=24" >> android/local.properties
-          cat android/local.properties
+          echo "flutter.targetSdkVersion=34" >> android/local.properties
 
       - run: flutter build apk --release --no-tree-shake-icons
 
