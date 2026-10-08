@@ -13,7 +13,7 @@ jobs:
         with:
           flutter-version: '3.19.6'
           channel: 'stable'
-      - run: flutter create  --platforms=android .
+      - run: flutter create --project-name video_4k_converter --platforms=android .
       - run: flutter pub get
       - run: |
           sed -i 's/minSdkVersion.*/minSdkVersion 24/' android/app/build.gradle || true
