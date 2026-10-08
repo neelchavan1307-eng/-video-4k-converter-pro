@@ -11,7 +11,7 @@ jobs:
           java-version: '17'
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.2'
+          flutter-version: '3.27.4'
           channel: 'stable'
 
       - run: flutter clean
@@ -19,9 +19,7 @@ jobs:
 
       - name: Fix minSdk for FFmpeg
         run: |
-          mkdir -p android
           echo "flutter.minSdkVersion=24" >> android/local.properties
-          echo "flutter.targetSdkVersion=34" >> android/local.properties
 
       - run: flutter build apk --release --no-tree-shake-icons
 
