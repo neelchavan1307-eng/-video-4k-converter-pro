@@ -14,7 +14,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Video 4K Converter',
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.green),
       home: const FilterScreen(),
     );
@@ -90,7 +89,7 @@ class _FilterScreenState extends State<FilterScreen> {
         m = [1.4,0,0,0,-10, 0,1.4,0,0,-10, 0,0,1.4,0,-10, 0,0,0,1,0];
       }
       String ff = i == extraNames.length - 1
-         ? "scale=3840:2160:flags=lanczos,eq=contrast=1.4:saturation=1.4:brightness=0.06,unsharp=5:5:1.0:5:5:0.0"
+        ? "scale=3840:2160:flags=lanczos,eq=contrast=1.4:saturation=1.4:brightness=0.06,unsharp=5:5:1.0:5:5:0.0"
           : "eq=contrast=${c.toStringAsFixed(2)}:brightness=${b.toStringAsFixed(2)}:saturation=1.3";
       filters.add(FilterInfo(
         name: extraNames[i],
@@ -141,165 +140,56 @@ class _FilterScreenState extends State<FilterScreen> {
   }
 
   @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
-  }
+  void dispose() { controller?.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
     final current = filters[selectedIndex];
     return Scaffold(
       appBar: AppBar(
-        title: Text('${filters.length} Filters + AI Suggest', style: const TextStyle(fontSize: 14)),
+        title: Text('${filters.length} Filters', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: FilledButton.icon(
-              onPressed: pickVideo,
-              icon: const Icon(Icons.video_library, size: 18),
-              label: const Text('व्हिडिओ टाका', style: TextStyle(fontSize: 12)),
-            ),
+            child: FilledButton.icon(onPressed: pickVideo, icon: const Icon(Icons.video_library, size: 18), label: const Text('व्हिडिओ टाका', style: TextStyle(fontSize: 12))),
           )
         ],
       ),
       body: Column(
         children: [
           Container(
-            height: 260,
-            width: double.infinity,
-            color: Colors.black,
+            height: 260, width: double.infinity, color: Colors.black,
             child: controller!= null && controller!.value.isInitialized
-               ? ColorFiltered(
-                    colorFilter: ColorFilter.matrix(current.matrix),
-                    child: AspectRatio(
-                      aspectRatio: controller!.value.aspectRatio,
-                      child: VideoPlayer(controller!),
-                    ),
-                  )
+              ? ColorFiltered(colorFilter: ColorFilter.matrix(current.matrix), child: AspectRatio(aspectRatio: controller!.value.aspectRatio, child: VideoPlayer(controller!)))
                 : const Center(child: Text('व्हिडिओ निवडा', style: TextStyle(color: Colors.white))),
           ),
           Padding(
             padding: const EdgeInsets.all(8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(10)),
-                    child: const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('15. Cold Tone', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                        Text('Warm आहे - Cold करा', style: TextStyle(fontSize: 10)),
-                      ],
-                    ),
-                  ),
-                ),
+            child: Row(children: [
+                Expanded(child: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(10)), child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('15. Cold Tone', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)), Text('Warm आहे - Cold करा', style: TextStyle(fontSize: 10))]))),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(10)),
-                    child: const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('72. AI 4K Plus FINAL', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                        Text('Final Export Best', style: TextStyle(fontSize: 10)),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+                Expanded(child: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(10)), child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('72. AI 4K Plus FINAL', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)), Text('Final Export Best', style: TextStyle(fontSize: 10))]))),
+              ]),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                ),
-                onPressed: isConverting? null : convertVideo,
-                child: isConverting
-                   ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : Text('CONVERT - ${current.name}', style: const TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ),
+            child: SizedBox(width: double.infinity, child: FilledButton(style: FilledButton.styleFrom(backgroundColor: Colors.green, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))), onPressed: isConverting? null : convertVideo, child: isConverting? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : Text('CONVERT - ${current.name}', style: const TextStyle(fontWeight: FontWeight.bold)))),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text('सर्व ${filters.length} फिल्टर (आडवा स्लाइड करा 👉):', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-            ),
-          ),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), child: Align(alignment: Alignment.centerLeft, child: Text('सर्व ${filters.length} फिल्टर (आडवा स्लाइड करा 👉):', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)))),
           SizedBox(
             height: 115,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: filters.length,
-              itemBuilder: (context, index) {
-                bool isSel = index == selectedIndex;
-                final f = filters[index];
+            child: ListView.builder(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 12), itemCount: filters.length, itemBuilder: (context, index) {
+                bool isSel = index == selectedIndex; final f = filters[index];
                 return GestureDetector(
                   onTap: () => setState(() => selectedIndex = index),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 82,
-                    margin: const EdgeInsets.only(right: 10, bottom: 8, top: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: isSel? Colors.green : Colors.grey.shade300, width: isSel? 2.5 : 1),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(isSel? 0.25 : 0.12),
-                          blurRadius: isSel? 8 : 4,
-                          offset: Offset(0, isSel? 4 : 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          height: 48,
-                          width: 58,
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: f.color),
-                          child: ColorFiltered(
-                            colorFilter: ColorFilter.matrix(f.matrix),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                gradient: LinearGradient(colors: [f.color, f.color.withOpacity(0.6)]),
-                              ),
-                              child: const Icon(Icons.image, size: 22, color: Colors.white70),
-                            ),
-                          ),
-                        ),
+                  child: AnimatedContainer(duration: const Duration(milliseconds: 200), width: 82, margin: const EdgeInsets.only(right: 10, bottom: 8, top: 4), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: isSel? Colors.green : Colors.grey.shade300, width: isSel? 2.5 : 1), boxShadow: [BoxShadow(color: Colors.black.withOpacity(isSel? 0.25 : 0.12), blurRadius: isSel? 8 : 4, offset: Offset(0, isSel? 4 : 2))]), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        Container(height: 48, width: 58, decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: f.color), child: ColorFiltered(colorFilter: ColorFilter.matrix(f.matrix), child: Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), gradient: LinearGradient(colors: [f.color, f.color.withOpacity(0.6)])), child: const Icon(Icons.image, size: 22, color: Colors.white70)))),
                         const SizedBox(height: 6),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: Text(f.name, maxLines: 2, textAlign: TextAlign.center, style: TextStyle(fontSize: 9, fontWeight: isSel? FontWeight.bold : FontWeight.w500)),
-                        ),
-                        if (isSel)
-                          Container(
-                            margin: const EdgeInsets.only(top: 3),
-                            height: 4,
-                            width: 18,
-                            decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(10)),
-                          ),
-                      ],
-                    ),
-                  ),
+                        Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Text(f.name, maxLines: 2, textAlign: TextAlign.center, style: TextStyle(fontSize: 9, fontWeight: isSel? FontWeight.bold : FontWeight.w500))),
+                        if (isSel) Container(margin: const EdgeInsets.only(top: 3), height: 4, width: 18, decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(10))),
+                      ])),
                 );
-              },
-            ),
+              }),
           ),
         ],
       ),
