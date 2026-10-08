@@ -19,7 +19,10 @@ jobs:
 
       - name: Fix minSdk for FFmpeg
         run: |
+          mkdir -p android
+          touch android/local.properties
           echo "flutter.minSdkVersion=24" >> android/local.properties
+          cat android/local.properties
 
       - run: flutter build apk --release --no-tree-shake-icons
 
