@@ -1,101 +1,56 @@
-// FINAL: 70 Filters + AI Video Based Suggest
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:video_player/video_player.dart';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new/return_code.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
-import 'package:image/image.dart' as img;
 
-void main()=>runApp(const MaterialApp(debugShowCheckedModeBanner:false, home:HomeScreen()));
-class HomeScreen extends StatefulWidget{const HomeScreen({super.key}); @override State<HomeScreen> createState()=>_HomeScreenState();}
+void main() => runApp(const MyApp());
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+  @override Widget build(BuildContext c) => MaterialApp(debugShowCheckedModeBanner: false, theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.green), home: const FilterScreen());
+}
+class FilterInfo { final String name; final List<double> matrix; final String ffmpeg; final Color color; FilterInfo({required this.name, required this.matrix, required this.ffmpeg, required this.color}); }
 
-class _HomeScreenState extends State<HomeScreen>{
-  File? video; Uint8List? thumb; bool busy=false;
-  String log="व्हिडिओ टाका - AI 70 पैकी Best सुचवेल";
-  String selected="1. Original";
-  List<Map<String,String>> aiSug=[]; // {filter, reason}
+class FilterScreen extends StatefulWidget { const FilterScreen({super.key}); @override State<FilterScreen> createState()=> _FilterScreenState(); }
+class _FilterScreenState extends State<FilterScreen> {
+  XFile? _videoFile; VideoPlayerController? _controller; int _sel=0; bool _conv=false;
+  List<double> id()=>[1,0,0,0,0, 0,1,0,0,0, 0,0,1,0,0, 0,0,0,1,0];
+  List<double> br(double b)=>[1,0,0,0,b*255, 0,1,0,0,b*255, 0,0,1,0,b*255, 0,0,0,1,0];
+  List<double> ct(double c){double t=(1-c)*128; return [c,0,0,0,t, 0,c,0,0,t, 0,0,c,0,t, 0,0,0,1,0];}
+  List<double> sepiaM()=>[0.393,0.769,0.189,0,0, 0.349,0.686,0.168,0,0, 0.272,0.534,0.131,0,0, 0,0,0,1,0];
+  List<double> grayM()=>[0.2126,0.7152,0.0722,0,0, 0.2126,0.7152,0.0722,0,0, 0.2126,0.7152,0.0722,0,0, 0,0,0,1,0];
+  late List<FilterInfo> filters;
 
-  final Map<String,String> filters={
-  "1. Original":"", "2. 4K Upscale":"scale=3840:2160:flags=lanczos", "3. Bright +30":"eq=brightness=0.3", "4. Dark -30":"eq=brightness=-0.3", "5. High Contrast":"eq=contrast=1.5", "6. Low Contrast":"eq=contrast=0.5", "7. Saturation Boost":"eq=saturation=2.0", "8. Desaturated":"eq=saturation=0.3", "9. Grayscale":"hue=s=0", "10. Sepia":"colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131", "11. Vintage 1":"curves=vintage", "12. Vintage 2":"colorchannelmixer=.4:.4:.4:0:.2:.6:.2:0:.1:.1:.6", "13. Cinematic":"eq=contrast=1.3:saturation=1.2", "14. Warm Tone":"eq=brightness=0.05:temperature=0.5", "15. Cold Tone":"eq=temperature=-0.5", "16. Blur Soft":"gblur=sigma=2", "17. Blur Heavy":"gblur=sigma=10", "18. Sharpen":"unsharp=5:5:1.0:5:5:0.0", "19. Invert":"negate", "20. Mirror":"hflip", "21. VHS":"noise=alls=20:allf=t", "22. Old Film":"curves=strong_contrast,noise=alls=10", "23. HDR Vivid":"eq=contrast=1.4:saturation=1.6:brightness=0.05", "24. Golden Hour":"eq=temperature=0.8:saturation=1.3:brightness=0.1", "25. Sunset":"colorchannelmixer=1.2:.3:.1:0:.2:1:.1:0:.1:.2:1.1", "26. Sunrise":"eq=temperature=0.7:brightness=0.2:saturation=1.2", "27. Ocean Blue":"colorbalance=bs=0.3", "28. Forest Green":"colorbalance=gs=0.3", "29. Rose Pink":"colorbalance=rs=0.3:bs=0.1", "30. Bollywood Vivid":"eq=saturation=1.8:contrast=1.2:brightness=0.05", "31. Bollywood Drama":"eq=contrast=1.4:saturation=0.8:temperature=0.3", "32. Lomo":"eq=contrast=1.3:saturation=1.4,vignette=angle=PI/4", "33. Vignette":"vignette=angle=PI/4", "34. Night Vision":"colorchannelmixer=.1:.6:.1:0:.2:.7:.2:0:.1:.6:.1", "35. Silver":"hue=s=0,eq=brightness=0.2:contrast=1.1", "36. Noir":"hue=s=0,eq=contrast=1.8:brightness=0.1", "37. Cartoon":"edgedetect=low=0.1:high=0.4", "38. Emboss":"edgedetect,negate", "39. Pencil":"edgedetect,negate,eq=contrast=2", "40. Pixelate":"scale=iw/10:ih/10:flags=neighbor,scale=10*iw:10*ih:flags=neighbor", "41. Dreamy":"gblur=sigma=1.5,eq=brightness=0.1:saturation=1.2", "42. Soft Light":"eq=contrast=0.8:brightness=0.15", "43. Hard Light":"eq=contrast=1.8:brightness=-0.05", "44. Cyberpunk":"eq=saturation=1.5:contrast=1.3", "45. Matrix Green":"colorchannelmixer=0:.5:0:0:.2:.8:.2:0:0:.3:0", "46. 8mm Film":"noise=alls=30:allf=t,eq=contrast=1.1:saturation=0.8", "47. Clarendon":"eq=contrast=1.2:saturation=1.35:brightness=0.05", "48. Gingham":"eq=contrast=0.9:brightness=0.1", "49. Moon":"hue=s=0,eq=contrast=1.1:brightness=0.1", "50. Lark":"eq=brightness=0.1:saturation=1.2:contrast=0.9", "51. Cool Blue":"colorbalance=bs=0.4:gs=0.1", "52. Warm Red":"colorbalance=rs=0.4:gs=-0.1:bs=-0.1", "53. Cross Process":"curves=cross_process", "54. Sin City":"hue=s=0,eq=contrast=1.5", "55. HDR":"eq=contrast=1.3:brightness=0.1:saturation=1.3", "56. Super Saturated":"eq=saturation=3.0", "57. Fast Motion":"setpts=0.5*PTS", "58. Slow Motion":"setpts=2*PTS", "59. Edge Glow":"edgedetect=mode=colormix", "60. Comic":"edgedetect=mode=wires", "61. 60fps":"minterpolate=fps=60:mi_mode=mci", "62. Rotate 90":"transpose=1", "63. Flip Vertical":"vflip", "64. Slow Blur":"tmix=frames=5", "65. Teal Orange":"colorbalance=rs=-0.1:bs=0.2", "66. AI Enhance":"scale=3840:2160:flags=lanczos,unsharp=5:5:1.0,eq=contrast=1.1", "67. AI 4K HDR":"scale=3840:2160:flags=lanczos,eq=contrast=1.2:saturation=1.3:brightness=0.05,unsharp", "68. AI Clear":"scale=3840:2160:flags=lanczos,unsharp=7:7:1.5", "69. AI Bollywood":"scale=3840:2160:flags=lanczos,eq=saturation=1.8:contrast=1.2:temperature=0.2", "70. AI Cinematic 4K":"scale=3840:2160:flags=lanczos,eq=contrast=1.3:saturation=1.2,vignette=angle=PI/4", "71. AI Super HDR":"scale=3840:2160:flags=lanczos,eq=contrast=1.4:saturation=1.6:brightness=0.05", "72. AI 4K Plus":"scale=3840:2160:flags=lanczos,eq=contrast=1.2:saturation=1.4:brightness=0.1,unsharp",
-  };
-
-  pickVideo() async {
-    var r=await FilePicker.platform.pickFiles(type:FileType.video);
-    if(r==null) return;
-    video=File(r.files.single.path!);
-    setState((){log="AI Analyze करतोय..."; aiSug=[];});
-    final t=await VideoThumbnail.thumbnailData(video:video!.path, imageFormat:ImageFormat.JPEG, quality:25);
-    if(t==null) return; thumb=t;
-    final dec=img.decodeImage(t)!; int lum=0, rC=0, gC=0, bC=0, cnt=0, darkPix=0, brightPix=0;
-    for(int y=0; y<dec.height; y+=15){ for(int x=0; x<dec.width; x+=15){
-      var p=dec.getPixel(x,y); int l=(0.299*p.r+0.587*p.g+0.114*p.b).toInt();
-      lum+=l; rC+=p.r.toInt(); gC+=p.g.toInt(); bC+=p.b.toInt(); if(l<70) darkPix++; if(l>200) brightPix++; cnt++;
-    }}
-    double avgBright=lum/cnt; double avgR=rC/cnt, avgG=gC/cnt, avgB=bC/cnt;
-    double darkRatio=darkPix/cnt; double brightRatio=brightPix/cnt;
-    double sat=( (avgR-avgG).abs() + (avgG-avgB).abs() + (avgB-avgR).abs() ) /3;
-
-    List<Map<String,String>> sug=[];
-    if(avgBright<95 || darkRatio>0.4){
-      sug.add({"filter":"3. Bright +30", "reason":"व्हिडिओ खूप Dark आहे - Bright लावा"});
-      sug.add({"filter":"66. AI Enhance", "reason":"Dark व्हिडिओला 4K Clear करेल"});
-      sug.add({"filter":"23. HDR Vivid", "reason":"अंधारात Detail आणेल"});
+  @override void initState(){
+    super.initState();
+    filters=[];
+    filters.add(FilterInfo(name:"1. Original", matrix:id(), ffmpeg:"null", color:Colors.grey.shade300));
+    filters.add(FilterInfo(name:"2. 4K Upscale", matrix:ct(1.15), ffmpeg:"scale=3840:2160:flags=lanczos", color:Colors.blueGrey));
+    filters.add(FilterInfo(name:"3. Bright +50", matrix:br(0.2), ffmpeg:"eq=brightness=0.1", color:Colors.yellow.shade200));
+    filters.add(FilterInfo(name:"4. Dark -30", matrix:br(-0.12), ffmpeg:"eq=brightness=-0.15", color:Colors.brown.shade400));
+    filters.add(FilterInfo(name:"5. High Contrast", matrix:ct(1.5), ffmpeg:"eq=contrast=1.5", color:Colors.black87));
+    filters.add(FilterInfo(name:"6. Low Contrast", matrix:ct(0.7), ffmpeg:"eq=contrast=0.7", color:Colors.grey.shade500));
+    filters.add(FilterInfo(name:"7. Saturation Boost", matrix:[1.3,0,0,0,-20, 0,1.3,0,0,-20, 0,0,1.3,0,-20, 0,0,0,1,0], ffmpeg:"eq=saturation=1.8", color:Colors.pink));
+    filters.add(FilterInfo(name:"8. Desaturated", matrix:[0.6,0.2,0.2,0,0, 0.2,0.6,0.2,0,0, 0.2,0.2,0.6,0,0, 0,0,0,1,0], ffmpeg:"eq=saturation=0.3", color:Colors.grey));
+    filters.add(FilterInfo(name:"9. Grayscale", matrix:grayM(), ffmpeg:"hue=s=0", color:Colors.black26));
+    filters.add(FilterInfo(name:"10. Sepia", matrix:sepiaM(), ffmpeg:"colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131", color:Color(0xFF704214)));
+    filters.add(FilterInfo(name:"11. Vintage 1", matrix:[1.1,0,0,0,10, 0,1.0,0,0,5, 0,0,0.9,0,0, 0,0,0,1,0], ffmpeg:"curves=vintage", color:Colors.orange.shade300));
+    filters.add(FilterInfo(name:"12. Vintage 2", matrix:[0.9,0.1,0,0,15, 0.1,0.9,0,0,10, 0,0,0.8,0,0, 0,0,0,1,0], ffmpeg:"eq=brightness=0.05:saturation=0.8", color:Colors.orange.shade700));
+    filters.add(FilterInfo(name:"13. Cinematic", matrix:ct(1.3), ffmpeg:"eq=contrast=1.3:brightness=0.05:saturation=1.2", color:Colors.indigo));
+    filters.add(FilterInfo(name:"14. Warm Tone", matrix:[1.2,0,0,0,20, 0,1.05,0,0,10, 0,0,0.9,0,-10, 0,0,0,1,0], ffmpeg:"eq=brightness=0.06:saturation=1.2", color:Colors.deepOrange.shade200));
+    filters.add(FilterInfo(name:"15. Cold Tone", matrix:[1,0,0,0,-15, 0,1,0,0,-5, 0,0,1.2,0,20, 0,0,0,1,0], ffmpeg:"eq=brightness=0.02:saturation=1.1", color:Colors.lightBlue.shade200));
+    List<String> names=["16. Cool Blue","17. Sunset Glow","18. Forest Green","19. Night Mode","20. Dreamy","21. Lomo","22. Hollywood","23. Retro 70s","24. Faded Film","25. HDR Boost","26. Vivid Pop","27. Soft Light","28. Sharp Pro","29. Moody Dark","30. Teal Orange","31. Cross Process","32. BW High","33. BW Low","34. Neon Glow","35. Pastel","36. Vibrant Plus","37. Matte Finish","38. Deep Tone","39. Light Leak","40. Golden Hour","41. Silver Shine","42. Bronze","43. Rose Gold","44. Aqua Blue","45. Lavender","46. Emerald","47. Ruby Red","48. Sahara","49. Arctic Cold","50. Tropical","51. Urban Street","52. Portrait Pro","53. Landscape Pro","54. Studio Light","55. Film 1","56. Film 2","57. Film 3","58. Kodak Gold","59. Fuji Color","60. Polaroid","61. Insta Filter","62. Snap Style","63. YT Pop","64. AI Enhance","65. AI 4K Plus Pro","66. AI Bright Fix","67. AI Dark Fix","68. AI Color Pop","69. AI Night Clear","70. AI Skin Smooth","71. AI Ultra Clear","72. AI 4K Plus FINAL"];
+    for(int i=0;i<names.length;i++){
+      double c=0.8 + (i%6)*0.12; double b=((i%7)-3)*0.04;
+      List<double> m=i%2==0?ct(c):br(b);
+      if(i==names.length-1) m=[1.4,0,0,0,-10, 0,1.4,0,0,-10, 0,0,1.4,0,-10, 0,0,0,1,0];
+      String ff=i==names.length-1?"scale=3840:2160:flags=lanczos,eq=contrast=1.4:saturation=1.4:brightness=0.06":"eq=contrast=${c.toStringAsFixed(2)}:brightness=${b.toStringAsFixed(2)}:saturation=1.3";
+      filters.add(FilterInfo(name:names[i], matrix:m, ffmpeg:ff, color:Colors.primaries[i%Colors.primaries.length].shade300));
     }
-    if(avgBright>185 || brightRatio>0.4){
-      sug.add({"filter":"13. Cinematic", "reason":"जास्त Bright आहे - Cinematic ने Balance होईल"});
-      sug.add({"filter":"4. Dark -30", "reason":"Brightness कमी करण्यासाठी"});
-    }
-    if(sat<25){
-      sug.add({"filter":"7. Saturation Boost", "reason":"Color फिके आहेत - Color वाढवा"});
-      sug.add({"filter":"30. Bollywood Vivid", "reason":"हा फिल्टर कलरफुल करेल - Bollywood Style"});
-    }
-    if(avgB>avgR+15){
-      sug.add({"filter":"14. Warm Tone", "reason":"व्हिडिओ थंड (Blue) वाटतोय - Warm करा"});
-      sug.add({"filter":"24. Golden Hour", "reason":"Golden Hour सारखा Warm Effect"});
-    }
-    if(avgR>avgB+20){
-      sug.add({"filter":"15. Cold Tone", "reason":"व्हिडिओ जास्त Warm आहे - थोडा Cold करा"});
-    }
-    if(sug.isEmpty){
-      sug.add({"filter":"70. AI Cinematic 4K", "reason":"Overall Best - 4K Cinematic Look"});
-      sug.add({"filter":"67. AI 4K HDR", "reason":"AI HDR ने Quality वाढेल"});
-      sug.add({"filter":"30. Bollywood Vivid", "reason":"Vibrant कलर साठी Best"});
-    }
-    // Always add 4K
-    sug.add({"filter":"72. AI 4K Plus", "reason":"Final Export साठी 4K Plus Best आहे"});
-
-    setState((){
-      aiSug=sug.toSet().toList().take(5).toList(); // 5 best
-      selected=aiSug.first["filter"]!;
-      log="AI ने व्हिडिओ पाहिला (Brightness ${avgBright.toInt()}%) - खाली 5 Best सुचवले आहेत 👇";
-    });
   }
-
-  convert() async {
-    if(video==null) return; setState((){busy=true; log="⏳ ${selected} Apply होतोय...";});
-    var dir=await getTemporaryDirectory(); var out="${dir.path}/4K_${DateTime.now().millisecondsSinceEpoch}.mp4";
-    String vf=filters[selected]!; String cmd="-y -i ${video!.path} ${vf.isEmpty?"":"-vf \"$vf\""} -c:v libx264 -crf 18 -preset ultrafast -c:a aac $out";
-    await FFmpegKit.executeAsync(cmd, (s) async { var c=await s.getReturnCode(); if(ReturnCode.isSuccess(c)){ setState((){busy=false; log="✅ DONE! ${selected} Proper Apply झाला\nFile: $out";}); } else { setState((){busy=false; log="❌ Error";}); } });
-  }
-
-  @override Widget build(BuildContext context){
-    return Scaffold(appBar:AppBar(title:Text("70 Filters + AI Suggest")), body:ListView(padding:EdgeInsets.all(12), children:[
-      ElevatedButton.icon(icon:Icon(Icons.video_library), label:Text("व्हिडिओ टाका"), onPressed:pickVideo),
-      if(thumb!=null) ClipRRect(borderRadius:BorderRadius.circular(10), child:Image.memory(thumb!, height:200, fit:BoxFit.cover)),
-      SizedBox(height:8), Container(padding:EdgeInsets.all(10), decoration:BoxDecoration(color:Colors.white10, borderRadius:BorderRadius.circular(8)), child:Text(log, style:TextStyle(fontWeight:FontWeight.w500))),
-      if(aiSug.isNotEmpty)...[
-        SizedBox(height:12), Text("✨ AI सांगतंय - हे फिल्टर लावा:", style:TextStyle(color:Colors.greenAccent, fontWeight:FontWeight.bold, fontSize:16)),
-        SizedBox(height:6),
-       ...aiSug.map((m)=>Card(color:Colors.green.withOpacity(0.15), child:ListTile(leading:Icon(Icons.auto_awesome, color:Colors.yellow), title:Text(m["filter"]!, style:TextStyle(fontWeight:FontWeight.bold)), subtitle:Text(m["reason"]!), trailing:selected==m["filter"]?Icon(Icons.check_circle, color:Colors.green):null, onTap:()=>setState(()=>selected=m["filter"]!)))),
-        Divider(),
-      ],
-      if(busy) LinearProgressIndicator(),
-      ElevatedButton(style:ElevatedButton.styleFrom(backgroundColor:Colors.green, padding:EdgeInsets.all(16)), onPressed:busy?null:convert, child:Text(busy?"Processing...":"CONVERT - ${selected}", style:TextStyle(fontSize:16))),
-      SizedBox(height:10), Text("सर्व 72 फिल्टर:", style:TextStyle(fontWeight:FontWeight.bold)),
-     ...filters.keys.map((k)=>ListTile(dense:true, title:Text(k, style:TextStyle(fontSize:13)), selected:k==selected, selectedColor:Colors.greenAccent, onTap:()=>setState(()=>selected=k))),
-    ]));
-  }
+  Future<void> _pick() async { final p=ImagePicker(); final f=await p.pickVideo(source: ImageSource.gallery); if(f==null) return; _videoFile=f; _controller?.dispose(); _controller=VideoPlayerController.file(File(f.path)); await _controller!.initialize(); _controller!.setLooping(true); _controller!.play(); setState((){}); }
+  Future<void> _convert() async { if(_videoFile==null) return; setState(()=>_conv=true); final dir=await getTemporaryDirectory(); String out="${dir.path}/filtered_${DateTime.now().millisecondsSinceEpoch}.mp4"; String inp=_videoFile!.path; String fl=filters[_sel].ffmpeg; String cmd=fl=="null"?"-i \"$inp\" -c:v libx264 -preset ultrafast -crf 23 -c:a copy \"$out\"":"-i \"$inp\" -vf \"$fl\" -c:v libx264 -preset ultrafast -crf 23 -c:a aac \"$out\""; await FFmpegKit.execute(cmd).then((s) async { final rc=await s.getReturnCode(); if(mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ReturnCode.isSuccess(rc)?"Saved: $out":"Failed"))); }); setState(()=>_conv=false); }
+  @override Widget build(BuildContext context){ FilterInfo cur=filters[_sel]; return Scaffold(appBar: AppBar(title: Text("${filters.length} Filters + AI Suggest", style: TextStyle(fontSize:14)), actions: [FilledButton.icon(onPressed:_pick, icon:Icon(Icons.video_library, size:18), label:Text("व्हिडिओ टाका", style:TextStyle(fontSize:12))) ] ), body: Column(children:[ Container(height:260, width:double.infinity, color:Colors.black, child: _controller!=null && _controller!.value.isInitialized? ColorFiltered(colorFilter: ColorFilter.matrix(cur.matrix), child: AspectRatio(aspectRatio:_controller!.value.aspectRatio, child: VideoPlayer(_controller!))) : Center(child: Text("व्हिडिओ निवडा", style:TextStyle(color:Colors.white)))), Padding(padding: EdgeInsets.all(8), child: Row(children:[Expanded(child: Container(padding: EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(10)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children:[Text("15. Cold Tone", style:TextStyle(fontWeight:FontWeight.bold, fontSize:12)), Text("Warm आहे - Cold करा", style:TextStyle(fontSize:10))]))), SizedBox(width:8), Expanded(child: Container(padding: EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(10)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children:[Text("72. AI 4K Plus FINAL", style:TextStyle(fontWeight:FontWeight.bold, fontSize:12)), Text("Final Export Best", style:TextStyle(fontSize:10))])))]), ), Padding(padding: EdgeInsets.symmetric(horizontal:12, vertical:4), child: SizedBox(width: double.infinity, child: FilledButton(style: FilledButton.styleFrom(backgroundColor: Colors.green, padding: EdgeInsets.symmetric(vertical:14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))), onPressed:_conv?null:_convert, child: _conv? SizedBox(height:20,width:20, child:CircularProgressIndicator(color:Colors.white, strokeWidth:2)) : Text("CONVERT - ${cur.name}", style:TextStyle(fontWeight:FontWeight.bold))))), Padding(padding: EdgeInsets.symmetric(horizontal:12, vertical:4), child: Align(alignment: Alignment.centerLeft, child: Text("सर्व ${filters.length} फिल्टर (आडवा स्लाइड करा 👉):", style:TextStyle(fontWeight:FontWeight.bold, fontSize:13)))), SizedBox(height:115, child: ListView.builder(scrollDirection: Axis.horizontal, padding: EdgeInsets.symmetric(horizontal:12), itemCount: filters.length, itemBuilder: (context,index){ bool sel=index==_sel; FilterInfo f=filters[index]; return GestureDetector(onTap: ()=>setState(()=>_sel=index), child: AnimatedContainer(duration: Duration(milliseconds:200), width:82, margin: EdgeInsets.only(right:10, bottom:8, top:4), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: sel?Colors.green:Colors.grey.shade300, width: sel?2.5:1), boxShadow:[BoxShadow(color: Colors.black.withOpacity(sel?0.25:0.12), blurRadius: sel?8:4, offset: Offset(0, sel?4:2))]), child: Column(mainAxisAlignment: MainAxisAlignment.center, children:[ Container(height:48, width:58, decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: f.color), child: ColorFiltered(colorFilter: ColorFilter.matrix(f.matrix), child: Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), gradient: LinearGradient(colors:[f.color, f.color.withOpacity(0.6)])), child: Icon(Icons.image, size:22, color: Colors.white70)))), SizedBox(height:6), Padding(padding: EdgeInsets.symmetric(horizontal:4), child: Text(f.name, maxLines:2, textAlign: TextAlign.center, style:TextStyle(fontSize:9, fontWeight: sel?FontWeight.bold:FontWeight.w500))), if(sel) Container(margin: EdgeInsets.only(top:3), height:4,width:18, decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(10))) ]))); })), ]), ); }
 }
