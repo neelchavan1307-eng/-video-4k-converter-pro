@@ -5,7 +5,7 @@ import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new/return_code.dart';
-import 'package:gallery_saver/gallery_saver.dart';
+import 'package:gal/gal.dart';
 import 'package:share_plus/share_plus.dart';
 
 void main() => runApp(MaterialApp(debugShowCheckedModeBanner: false, home: V2Editor(), theme: ThemeData.dark()));
@@ -112,7 +112,7 @@ class _V2EditorState extends State<V2Editor> {
 
     FFmpegKit.executeAsync(cmd, (session) async {
       if(ReturnCode.isSuccess(await session.getReturnCode())){
-        await GallerySaver.saveVideo(out, albumName: "4K V2");
+        await Gal.putVideo(out, album: "4K V2");
         setState(() { processing=false; progress=100; status="✅ 100% Saved to Gallery!"; });
         // Share popup
         showDialog(context: context, builder: (_)=>AlertDialog(title: Text("Saved!"), content: Text("Video saved to Gallery in 4K with ${filters[filterKey]!['name']}"), actions: [
