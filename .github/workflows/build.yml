@@ -11,18 +11,16 @@ jobs:
           java-version: '17'
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.1'
+          flutter-version: '3.22.0'
           channel: 'stable'
       - run: flutter create  --project-name video_4k_converter  --platforms=android .
       - run: |
           echo "android.useAndroidX=true" >> android/gradle.properties
-          echo "android.enableJetifier=true" >> android/gradle.properties
-      - run: |
-          sed -i 's/minSdkVersion.*/minSdkVersion 24/' android/app/build.gradle
-          sed -i 's/minSdk.*/minSdk 24/' android/app/build.gradle || true
+          sed -i "s/minSdkVersion.*/minSdkVersion 24/" android/app/build.gradle
+          sed -i "s/ext.kotlin_version.*/ext.kotlin_version = '1.9.22'/" android/build.gradle
       - run: flutter pub get
       - run: flutter build apk --release --no-tree-shake-icons
       - uses: actions/upload-artifact@v4
         with:
-          name: apk
+          name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
