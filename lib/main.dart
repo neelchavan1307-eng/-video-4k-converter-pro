@@ -17,13 +17,12 @@ class _V2EditorState extends State<V2Editor> {
   bool processing = false, blurBg = false;
   double progress = 0, startTrim = 0, endTrim = 100;
   String status = "Pick a Video", quality = "2160";
-  List<String> selectedFilters = ["f05_warm"]; // आता Multi - List!
+  List<String> selectedFilters = ["f05_warm"];
   String overlayText = "";
   TextEditingController textCtrl = TextEditingController();
-  List<String> aiSuggestions = ["f05_warm", "f15_dreamy", "f12_hdr"]; // आता 3 AI Suggestions
+  List<String> aiSuggestions = ["f05_warm", "f15_dreamy", "f12_hdr"];
   String aiReason = "Video टाका - AI Check करेल!";
 
-  // 72 FILTERS - तुझ्या 24 मध्ये 48 अजून Add केले - Proper Apply होतील
   final Map<String, Map<String,String>> filters = {
     "f01_normal": {"name": "Normal", "cmd": ""},
     "f02_bw": {"name": "B&W", "cmd": "hue=s=0"},
@@ -49,7 +48,6 @@ class _V2EditorState extends State<V2Editor> {
     "f22_ice": {"name": "Ice", "cmd": "colorbalance=bs=0.4"},
     "f23_pop": {"name": "Pop Art", "cmd": "eq=saturation=3:contrast=2"},
     "f24_portrait": {"name": "Portrait Pro", "cmd": "eq=brightness=0.08:saturation=1.1,unsharp=3:3:0.5"},
-    // 25-72 नवीन - 72 पूर्ण
     "f25_4kultra": {"name": "4K Ultra", "cmd": "scale=3840:2160:flags=lanczos"},
     "f26_sharpen": {"name": "Sharpen", "cmd": "unsharp=5:5:1"},
     "f27_softskin": {"name": "Soft Skin", "cmd": "eq=saturation=1.1,gblur=sigma=0.8"},
@@ -61,8 +59,7 @@ class _V2EditorState extends State<V2Editor> {
     "f33_cyber": {"name": "Cyberpunk", "cmd": "eq=saturation=2:contrast=1.3,colorbalance=rs=0.3:bs=-0.3"},
     "f34_dreamy2": {"name": "Dreamy", "cmd": "gblur=sigma=1.5,eq=brightness=0.08"},
     "f35_mirror": {"name": "Mirror", "cmd": "hflip"},
-    "f36_vignette": {"name": "Vignette", "cmd": "vignette=PI/4"},
-    "f37_insta": {"name": "Insta Sq", "cmd": "crop=1:1,scale=1080:1080"},
+    "f36_vignette": {"name": "Vignette", "cmd": "vignette=PI/4"},    "f37_insta": {"name": "Insta Sq", "cmd": "crop=1:1,scale=1080:1080"},
     "f38_sunset": {"name": "Sunset", "cmd": "eq=brightness=0.08:saturation=1.8:contrast=1.2"},
     "f39_sunrise": {"name": "Sunrise", "cmd": "eq=brightness=0.18:saturation=1.4"},
     "f40_rosegold": {"name": "Rose Gold", "cmd": "colorchannelmixer=1:.3:.3:0:.2:.7:.3:0:.2:.3:.9"},
@@ -101,7 +98,6 @@ class _V2EditorState extends State<V2Editor> {
   };
   List<String> get keys => filters.keys.toList();
 
-  // AI Video Check - व्हिडिओ चेक करून Best Filter Combo सांगणार
   Future<void> analyzeAI(String path) async {
     setState((){ aiReason = "AI Video Check करत आहे..."; });
     var infoS = await FFprobeKit.getMediaInformation(path);
@@ -109,21 +105,20 @@ class _V2EditorState extends State<V2Editor> {
     double dur = double.tryParse(info?.getDuration()??"0")?? 0;
     int w = 0;
     if(info?.getStreams().isNotEmpty??false) w = info!.getStreams().first.getWidth()?? 0;
-
     if(path.toLowerCase().contains("birthday") || path.toLowerCase().contains("party") || dur < 20){
       aiSuggestions = ["f05_warm", "f15_dreamy", "f25_4kultra"];
-      aiReason = "AI Detect: Birthday Video (${dur.toInt()}s). अंधार आहे, Warm Birthday + Dreamy Glow + 4K Ultra हे 3 एकत्र लावा - हेच Best Combo!";
+      aiReason = "AI Detect: Birthday Video (${dur.toInt()}s). अंधार आहे, Warm Birthday + Dreamy Glow + 4K Ultra हे 3 एकत्र लावा - Best Combo!";
     } else if(w < 1280){
       aiSuggestions = ["f25_4kultra", "f26_sharpen", "f12_hdr"];
-      aiReason = "Low Quality (${w}p) Video आहे. AI Suggestion: 4K Ultra + Sharpen + HDR 4K - 3 Filter एकत्र Apply करा!";
+      aiReason = "Low Quality (${w}p) Video. AI Suggestion: 4K Ultra + Sharpen + HDR 4K - 3 Filter एकत्र Apply करा!";
     } else if(path.toLowerCase().contains("night")){
       aiSuggestions = ["f28_night", "f07_bright", "f12_hdr"];
-      aiReason = "Night Video Detect. Bright + Night Boost + HDR 4K हा Combo योग्य राहील!";
+      aiReason = "Night Video Detect. Bright + Night Boost + HDR 4K योग्य!";
     } else {
       aiSuggestions = ["f10_cinematic", "f08_vivid", "f12_hdr"];
       aiReason = "Daylight Video. Cinematic + Vivid + HDR 4K - हे 3 एकत्र लावा!";
     }
-    setState((){ selectedFilters = List.from(aiSuggestions); }); // AI ने सांगितलेले Auto Select
+    setState((){ selectedFilters = List.from(aiSuggestions); });
   }
 
   Future pickVideo() async {
@@ -145,7 +140,7 @@ class _V2EditorState extends State<V2Editor> {
   void toggleFilter(String k){
     setState((){
       if(selectedFilters.contains(k)) selectedFilters.remove(k);
-      else if(selectedFilters.length < 10) selectedFilters.add(k); // 10 पर्यंत एकत्र!
+      else if(selectedFilters.length < 10) selectedFilters.add(k);
     });
   }
 
@@ -167,8 +162,6 @@ class _V2EditorState extends State<V2Editor> {
     double dur = vc!.value.duration.inSeconds.toDouble();
     double sSec = dur * (startTrim/100);
     double eSec = dur * (endTrim/100);
-
-    // Multi-Filter Combine - सगळे एकत्र Apply!
     List<String> vf = ["scale=-2:$quality"];
     if(blurBg) vf.add("gblur=sigma=2:steps=1");
     for(var k in selectedFilters){
@@ -178,11 +171,9 @@ class _V2EditorState extends State<V2Editor> {
       vf.add("drawtext=text='$overlayText':fontcolor=white:fontsize=60:box=1:boxcolor=black@0.5:boxborderw=10:x=(w-text_w)/2:y=h-th-100");
     }
     String vfStr = vf.join(",");
-
     String cmd = musicPath!=null
-     ? "-ss $sSec -to $eSec -i $videoPath -i $musicPath -vf $vfStr -map 0:v:0 -map 1:a:0 -shortest -c:v libx264 -preset ultrafast -c:a aac $out"
+    ? "-ss $sSec -to $eSec -i $videoPath -i $musicPath -vf $vfStr -map 0:v:0 -map 1:a:0 -shortest -c:v libx264 -preset ultrafast -c:a aac $out"
       : "-ss $sSec -to $eSec -i $videoPath -vf $vfStr -c:v libx264 -preset ultrafast -c:a aac $out";
-
     FFmpegKit.executeAsync(cmd, (session) async {
       if(ReturnCode.isSuccess(await session.getReturnCode())){
         var moviesDir = Directory("/storage/emulated/0/Movies/4K Converter");
@@ -190,7 +181,7 @@ class _V2EditorState extends State<V2Editor> {
         var newPath = "${moviesDir.path}/4K_${DateTime.now().millisecondsSinceEpoch}.mp4";
         await File(out).copy(newPath);
         setState(() { processing=false; progress=100; status="✅ 100% Saved! ${selectedFilters.length} Filters Applied!"; });
-        showDialog(context: context, builder: (_)=>AlertDialog(title: Text("Saved!"), content: Text("Video saved to Movies/4K Converter\nFilters: ${selectedFilters.map((e)=>filters[e]!['name']).join(' + ')}\nProperly Applied!"), actions: [TextButton(onPressed: ()=>Navigator.pop(context), child: Text("OK"))]));
+        showDialog(context: context, builder: (_)=>AlertDialog(title: Text("Saved!"), content: Text("Saved to Movies/4K Converter\nFilters: ${selectedFilters.map((e)=>filters[e]!['name']).join(' + ')}"), actions: [TextButton(onPressed: ()=>Navigator.pop(context), child: Text("OK"))]));
       } else {
         setState(() { processing=false; status="Failed"; });
       }
@@ -212,4 +203,29 @@ class _V2EditorState extends State<V2Editor> {
       ]),
       body: Column(children: [
         Expanded(flex: 4, child: Stack(children: [
-          Center(child: vc!=null && vc!.value.isInitialized? AspectRatio(aspectRatio: vc!.value.aspectRatio, child: VideoPlayer(vc!)) : Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.video_library, size: 80, color: Colors.white24), SizedBox(height:10), ElevatedButton(onPressed: pickVideo, child: Text("PICK VIDEO -
+          Center(child: vc!=null && vc!.value.isInitialized? AspectRatio(aspectRatio: vc!.value.aspectRatio, child: VideoPlayer(vc!)) : Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.video_library, size: 80, color: Colors.white24), SizedBox(height:10), ElevatedButton(onPressed: pickVideo, child: Text("PICK VIDEO - AI CHECK करेल"))])),
+          Positioned(left:8, bottom:35, child: GestureDetector(onTap: fullScreen, child: Container(padding: EdgeInsets.all(6), decoration: BoxDecoration(color: Colors.purple, borderRadius: BorderRadius.circular(4), border: Border.all(color: Colors.white)), child: Icon(Icons.fullscreen, size: 20)))),
+          Positioned(bottom:5, left:10, right:10, child: vc!=null? RangeSlider(min:0, max:100, values: RangeValues(startTrim, endTrim), activeColor: Colors.cyanAccent, onChanged: (v){ setState((){ startTrim=v.start; endTrim=v.end; }); }) : SizedBox()),
+        ])),
+        if(selectedFilters.isNotEmpty) Container(height: 40, color: Colors.black, child: ListView(scrollDirection: Axis.horizontal, children: selectedFilters.map((k)=> Padding(padding: EdgeInsets.all(4), child: Chip(label: Text(filters[k]!['name']!, style: TextStyle(fontSize: 10)), backgroundColor: Colors.orange, deleteIcon: Icon(Icons.close, size: 14), onDeleted: ()=> toggleFilter(k)))).toList())),
+        Container(height: 90, color: Color(0xFF111111), child: ListView.builder(scrollDirection: Axis.horizontal, itemCount: keys.length, itemBuilder: (c,i){
+          var k = keys[i]; bool sel = selectedFilters.contains(k);
+          return GestureDetector(onTap: ()=> toggleFilter(k), child: Container(width: 75, margin: EdgeInsets.all(6), decoration: BoxDecoration(color: sel? Colors.orange : Colors.white12, borderRadius: BorderRadius.circular(10), border: Border.all(color: sel? Colors.white: Colors.transparent, width: sel?2:0)), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(sel? Icons.check_circle : Icons.filter_alt, size: 26, color: sel? Colors.black: Colors.white70), SizedBox(height:4), Text(filters[k]!['name']!, style: TextStyle(fontSize: 9, color: sel? Colors.black: Colors.white, fontWeight: sel? FontWeight.bold: FontWeight.normal), textAlign: TextAlign.center, maxLines:2)])));
+        })),
+        Container(padding: EdgeInsets.all(8), color: Color(0xFF0F2810), child: Column(children: [
+          Container(padding: EdgeInsets.all(6), decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(6), border: Border.all(color: Colors.green)), child: Row(children: [Icon(Icons.auto_awesome, size: 16, color: Colors.green), SizedBox(width: 6), Expanded(child: Text(aiReason, style: TextStyle(fontSize: 10, color: Colors.greenAccent)))])),
+          SizedBox(height: 6),
+          Row(children: aiSuggestions.map((k)=> Expanded(child: Padding(padding: EdgeInsets.only(right: 6), child: ActionChip(avatar: Icon(Icons.auto_awesome, size:14, color: Colors.green), label: Text(filters[k]!['name']!, style: TextStyle(fontSize:9)), onPressed: ()=> toggleFilter(k), backgroundColor: selectedFilters.contains(k)? Colors.green: Colors.green.withOpacity(0.25))))).toList()),
+          Row(children: [
+            Expanded(child: TextField(controller: textCtrl, decoration: InputDecoration(hintText: "Add Text e.g. Happy Birthday", isDense:true, border: OutlineInputBorder()), style: TextStyle(fontSize:12), onChanged: (v)=>overlayText=v)),
+            SizedBox(width:6),
+            ElevatedButton(onPressed: pickMusic, child: Text(musicPath==null?"🎵 Music":"🎵 Added", style: TextStyle(fontSize:10)), style: ElevatedButton.styleFrom(backgroundColor: Colors.white12, minimumSize: Size(80, 36))),
+            Switch(value: blurBg, onChanged: (v)=>setState(()=>blurBg=v), activeColor: Colors.purple),
+            Text("Blur BG", style: TextStyle(fontSize:9)),
+          ]),
+        ])),
+        Container(height: 30, width: double.infinity, decoration: BoxDecoration(color: Colors.black, border: Border.all(color: Colors.red, width: 1.5)), child: processing? Stack(children: [FractionallySizedBox(widthFactor: progress/100, child: Container(color: Colors.red, alignment: Alignment.center, child: Text("${progress.toStringAsFixed(0)}% - ${selectedFilters.length} Filters Exporting...", style: TextStyle(color: Colors.white, fontSize: 10))))]) : Center(child: Text(status, style: TextStyle(color: Colors.white70, fontSize:11)))),
+      ]),
+    );
+  }
+}
