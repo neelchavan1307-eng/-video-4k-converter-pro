@@ -15,14 +15,22 @@ jobs:
           channel: 'stable'
       - run: flutter create  --project-name video_4k_converter  --platforms=android .
       - run: |
+          # Fix Kotlin
           sed -i "s/ext.kotlin_version.*/ext.kotlin_version = '1.9.22'/" android/build.gradle
-          sed -i 's/1.7.10/1.9.22/g' android/build.gradle android/app/build.gradle android/settings.gradle || true
-          sed -i 's/1.8.22/1.9.22/g' android/build.gradle android/app/build.gradle android/settings.gradle || true
-          sed -i 's/minSdkVersion.*/minSdkVersion 24/' android/app/build.gradle
-          sed -i 's/compileSdkVersion.*/compileSdkVersion 34/' android/app/build.gradle || true
-          sed -i 's/targetSdkVersion.*/targetSdkVersion 34/' android/app/build.gradle || true
-          sed -i 's/compileSdk.*/compileSdk 34/' android/app/build.gradle || true
-          sed -i 's/targetSdk.*/targetSdk 34/' android/app/build.gradle || true
+
+          # FIX for minSdkVersion ERROR - Add = sign
+          sed -i 's/minSdkVersion 24/minSdkVersion = 24/g' android/app/build.gradle || true
+          sed -i 's/minSdkVersion = 24/minSdkVersion = 24/g' android/app/build.gradle
+          sed -i 's/minSdkVersion flutter/minSdkVersion = flutter/g' android/app/build.gradle || true
+          sed -i 's/minSdkVersion.*/minSdkVersion = 24/g' android/app/build.gradle || true
+          sed -i 's/minSdk.*/minSdk = 24/g' android/app/build.gradle || true
+          sed -i 's/minSdk =.*/minSdk = 24/g' android/app/build.gradle || true
+
+          # Force compileSdk 34
+          sed -i 's/compileSdkVersion.*/compileSdkVersion 34/g' android/app/build.gradle || true
+          sed -i 's/targetSdkVersion.*/targetSdkVersion 34/g' android/app/build.gradle || true
+          sed -i 's/compileSdk.*/compileSdk = 34/g' android/app/build.gradle || true
+          sed -i 's/compileSdk.*/compileSdk = 34/g' android/app/build.gradle || true
       - run: flutter clean
       - run: flutter pub get
       - run: flutter build apk --release --no-tree-shake-icons
