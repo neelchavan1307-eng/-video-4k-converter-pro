@@ -13,7 +13,7 @@ jobs:
         with:
           flutter-version: '3.27.1'
           channel: 'stable'
-      - run: flutter create --project-name video_4k_converter --platforms=android .
+      - run: flutter create  --project-name video_4k_converter --platforms=android .
       - run: |
           echo "android.useAndroidX=true" >> android/gradle.properties
           echo "android.enableJetifier=true" >> android/gradle.properties
