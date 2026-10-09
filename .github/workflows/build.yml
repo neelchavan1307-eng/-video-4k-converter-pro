@@ -11,59 +11,20 @@ jobs:
           java-version: '17'
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.3'
+          flutter-version: '3.24.5'
           channel: 'stable'
-      - run: flutter create  --project-name video_4k_converter  --platforms=android .
-      - run: |
-          cat > android/app/build.gradle << 'EOF'
-          plugins {
-              id "com.android.application"
-              id "kotlin-android"
-              id "dev.flutter.flutter-gradle-plugin"
-          }
-          def localProperties = new Properties()
-          def localPropertiesFile = rootProject.file('local.properties')
-          if (localPropertiesFile.exists()) {
-              localPropertiesFile.withReader('UTF-8') { reader ->
-                  localProperties.load(reader)
-              }
-          }
-          def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
-          if (flutterVersionCode == null) { flutterVersionCode = '1' }
-          def flutterVersionName = localProperties.getProperty('flutter.versionName')
-          if (flutterVersionName == null) { flutterVersionName = '1.0' }
-          android {
-              namespace "com.example.video_4k_converter"
-              compileSdk 33
-              ndkVersion flutter.ndkVersion
-              compileOptions {
-                  sourceCompatibility JavaVersion.VERSION_1_8
-                  targetCompatibility JavaVersion.VERSION_1_8
-              }
-              kotlinOptions { jvmTarget = '1.8' }
-              sourceSets { main.java.srcDirs += 'src/main/kotlin' }
-              defaultConfig {
-                  applicationId "com.example.video_4k_converter"
-                  minSdk 24
-                  targetSdk 33
-                  versionCode flutterVersionCode.toInteger()
-                  versionName flutterVersionName
-              }
-              buildTypes { release { signingConfig signingConfigs.debug } }
-          }
-          flutter { source '../..' }
-          dependencies {}
-          EOF
-      - run: |
-          sed -i "s/ext.kotlin_version.*/ext.kotlin_version = '1.9.22'/" android/build.gradle || true
-          sed -i 's/org.jetbrains.kotlin.android" version ".*"/org.jetbrains.kotlin.android" version "1.9.22" apply false/' android/settings.gradle || true
-          sed -i 's/1.7.10/1.9.22/g; s/1.8.22/1.9.22/g; s/1.9.10/1.9.22/g' android/settings.gradle android/build.gradle || true
-      - run: flutter clean
-      - run: flutter pub get
-      - run: |
-          find ~/.pub-cache -name "build.gradle" -type f -exec sed -i 's/compileSdkVersion 35/compileSdkVersion 33/g; s/compileSdk 35/compileSdk 33/g; s/compileSdkVersion 34/compileSdkVersion 33/g; s/compileSdk 34/compileSdk 33/g' {} \; || true
-          find ~/.pub-cache -name "build.gradle" -type f -exec sed -i 's/targetSdkVersion 35/targetSdkVersion 33/g; s/targetSdk 35/targetSdk 33/g' {} \; || true
+
+      - name: Install Android 35 SDK - हाच खरा Fix आहे
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-35" "build-tools;35.0.0" "platforms;android-34"
+
+      - run: flutter create --project-name video_4k_converter --platforms=android.
+
+      - run: flutter clean && flutter pub get
+
       - run: flutter build apk --release --no-tree-shake-icons
+
       - uses: actions/upload-artifact@v4
         with:
           name: app-release
