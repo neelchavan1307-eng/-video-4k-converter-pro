@@ -1,5 +1,5 @@
 name: video_4k_converter
-description: 4K Converter Pro V2 - Fixed Build
+description: 4K Converter Pro V2 Fixed
 publish_to: 'none'
 version: 2.0.0+1
 environment:
@@ -11,7 +11,7 @@ dependencies:
   file_picker: any
   path_provider: any
   video_player: any
-  gallery_saver: any
+  gal: any
   share_plus: any
 flutter:
   uses-material-design: true
