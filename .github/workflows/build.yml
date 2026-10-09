@@ -27,8 +27,8 @@ jobs:
           sed -i 's/compileSdkVersion.*/compileSdkVersion 35/' android/app/build.gradle || true
           sed -i 's/targetSdk.*/targetSdk 35/' android/app/build.gradle
           sed -i 's/targetSdkVersion.*/targetSdkVersion 35/' android/app/build.gradle || true
-          sed -i 's/minSdk.*/minSdk 23/' android/app/build.gradle
-          sed -i 's/minSdkVersion.*/minSdkVersion 23/' android/app/build.gradle || true
+          sed -i 's/minSdk.*/minSdk 24/' android/app/build.gradle
+          sed -i 's/minSdkVersion.*/minSdkVersion 24/' android/app/build.gradle || true
 
       - run: flutter clean && flutter pub get
       - run: flutter build apk --release --no-tree-shake-icons
