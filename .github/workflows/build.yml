@@ -13,15 +13,16 @@ jobs:
         with:
           flutter-version: '3.22.3'
           channel: 'stable'
-      - run: flutter create  --project-name video_4k_converter - -platforms=android .
+      - run: flutter create  --project-name video_4k_converter  --platforms=android .
       - run: |
           sed -i "s/ext.kotlin_version.*/ext.kotlin_version = '1.9.22'/" android/build.gradle
           sed -i 's/1.7.10/1.9.22/g' android/build.gradle android/app/build.gradle android/settings.gradle || true
           sed -i 's/1.8.22/1.9.22/g' android/build.gradle android/app/build.gradle android/settings.gradle || true
           sed -i 's/minSdkVersion.*/minSdkVersion 24/' android/app/build.gradle
-          sed -i 's/compileSdkVersion.*/compileSdkVersion 33/' android/app/build.gradle || true
-          sed -i 's/targetSdkVersion.*/targetSdkVersion 33/' android/app/build.gradle || true
-          sed -i 's/compileSdk.*/compileSdk 33/' android/app/build.gradle || true
+          sed -i 's/compileSdkVersion.*/compileSdkVersion 34/' android/app/build.gradle || true
+          sed -i 's/targetSdkVersion.*/targetSdkVersion 34/' android/app/build.gradle || true
+          sed -i 's/compileSdk.*/compileSdk 34/' android/app/build.gradle || true
+          sed -i 's/targetSdk.*/targetSdk 34/' android/app/build.gradle || true
       - run: flutter clean
       - run: flutter pub get
       - run: flutter build apk --release --no-tree-shake-icons
