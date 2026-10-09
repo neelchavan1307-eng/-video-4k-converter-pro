@@ -8,7 +8,7 @@ dependencies:
   flutter:
     sdk: flutter
   ffmpeg_kit_flutter_new: any
-  file_picker: any
+  file_picker: 8.1.6
   path_provider: any
   video_player: any
 flutter:
