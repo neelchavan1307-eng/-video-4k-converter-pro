@@ -1,24 +1,17 @@
 name: video_4k_converter
-description: 4K Video Converter Pro with 72 Filters
+description: 4K Converter Pro V2
 publish_to: 'none'
-version: 1.0.0+1
-
+version: 2.0.0+1
 environment:
   sdk: '>=3.0.0 <4.0.0'
-
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.2
-  image_picker: ^1.0.7
-  video_player: ^2.8.2
-  ffmpeg_kit_flutter_new: any
-  path_provider: ^2.1.1
-
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^2.0.0
-
+  ffmpeg_kit_flutter_new: ^6.0.3
+  file_picker: any
+  path_provider: any
+  video_player: any
+  gallery_saver: any
+  share_plus: any
 flutter:
   uses-material-design: true
