@@ -13,27 +13,18 @@ jobs:
         with:
           flutter-version: '3.22.3'
           channel: 'stable'
-      - run: flutter create  --project-name video_4k_converter  --platforms=android .
+      - run: flutter create  --project-name video_4k_converter - -platforms=android .
       - run: |
-          # 1. Kotlin 1.9.22 Force for ALL files
           sed -i "s/ext.kotlin_version.*/ext.kotlin_version = '1.9.22'/" android/build.gradle
-          sed -i "s/id.*kotlin.*1.7.*/id \"org.jetbrains.kotlin.android\" version \"1.9.22\" apply false/" android/settings.gradle || true
-          sed -i "s/1.7.10/1.9.22/g" android/build.gradle android/app/build.gradle android/settings.gradle || true
-          sed -i "s/1.8.22/1.9.22/g" android/build.gradle android/app/build.gradle android/settings.gradle || true
-
-          # 2. Force compileSdk 33 for EVERY module (including ffmpeg_kit)
-          find android -name "build.gradle" -type f -exec sed -i "s/compileSdkVersion.*/compileSdkVersion 33/g" {} \; || true
-          find android -name "build.gradle" -type f -exec sed -i "s/compileSdk.*/compileSdk 33/g" {} \; || true
-          find android -name "build.gradle" -type f -exec sed -i "s/targetSdkVersion.*/targetSdkVersion 33/g" {} \; || true
-          find android -name "build.gradle" -type f -exec sed -i "s/targetSdk.*/targetSdk 33/g" {} \; || true
-          find ~/.pub-cache -name "build.gradle" -type f -exec sed -i "s/compileSdkVersion.*/compileSdkVersion 33/g" {} \; 2>/dev/null || true
-          find ~/.pub-cache -name "build.gradle" -type f -exec sed -i "s/compileSdk.*/compileSdk 33/g" {} \; 2>/dev/null || true
-
-          # 3. minSdk
-          sed -i "s/minSdkVersion.*/minSdkVersion 24/" android/app/build.gradle
+          sed -i 's/1.7.10/1.9.22/g' android/build.gradle android/app/build.gradle android/settings.gradle || true
+          sed -i 's/1.8.22/1.9.22/g' android/build.gradle android/app/build.gradle android/settings.gradle || true
+          sed -i 's/minSdkVersion.*/minSdkVersion 24/' android/app/build.gradle
+          sed -i 's/compileSdkVersion.*/compileSdkVersion 33/' android/app/build.gradle || true
+          sed -i 's/targetSdkVersion.*/targetSdkVersion 33/' android/app/build.gradle || true
+          sed -i 's/compileSdk.*/compileSdk 33/' android/app/build.gradle || true
       - run: flutter clean
       - run: flutter pub get
-      - run: flutter build apk --release --no-tree-shake-icons --verbose
+      - run: flutter build apk --release --no-tree-shake-icons
       - uses: actions/upload-artifact@v4
         with:
           name: app-release
