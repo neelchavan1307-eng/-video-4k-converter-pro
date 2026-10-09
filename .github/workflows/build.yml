@@ -15,22 +15,46 @@ jobs:
           channel: 'stable'
       - run: flutter create  --project-name video_4k_converter  --platforms=android .
       - run: |
-          # Fix Kotlin
+          cat > android/app/build.gradle << 'EOF'
+          plugins {
+              id "com.android.application"
+              id "kotlin-android"
+              id "dev.flutter.flutter-gradle-plugin"
+          }
+          def localProperties = new Properties()
+          def localPropertiesFile = rootProject.file('local.properties')
+          if (localPropertiesFile.exists()) {
+              localPropertiesFile.withReader('UTF-8') { reader ->
+                  localProperties.load(reader)
+              }
+          }
+          def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+          if (flutterVersionCode == null) { flutterVersionCode = '1' }
+          def flutterVersionName = localProperties.getProperty('flutter.versionName')
+          if (flutterVersionName == null) { flutterVersionName = '1.0' }
+          android {
+              namespace "com.example.video_4k_converter"
+              compileSdk 34
+              ndkVersion flutter.ndkVersion
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_1_8
+                  targetCompatibility JavaVersion.VERSION_1_8
+              }
+              kotlinOptions { jvmTarget = '1.8' }
+              sourceSets { main.java.srcDirs += 'src/main/kotlin' }
+              defaultConfig {
+                  applicationId "com.example.video_4k_converter"
+                  minSdk 24
+                  targetSdk 34
+                  versionCode flutterVersionCode.toInteger()
+                  versionName flutterVersionName
+              }
+              buildTypes { release { signingConfig signingConfigs.debug } }
+          }
+          flutter { source '../..' }
+          dependencies {}
+          EOF
           sed -i "s/ext.kotlin_version.*/ext.kotlin_version = '1.9.22'/" android/build.gradle
-
-          # FIX for minSdkVersion ERROR - Add = sign
-          sed -i 's/minSdkVersion 24/minSdkVersion = 24/g' android/app/build.gradle || true
-          sed -i 's/minSdkVersion = 24/minSdkVersion = 24/g' android/app/build.gradle
-          sed -i 's/minSdkVersion flutter/minSdkVersion = flutter/g' android/app/build.gradle || true
-          sed -i 's/minSdkVersion.*/minSdkVersion = 24/g' android/app/build.gradle || true
-          sed -i 's/minSdk.*/minSdk = 24/g' android/app/build.gradle || true
-          sed -i 's/minSdk =.*/minSdk = 24/g' android/app/build.gradle || true
-
-          # Force compileSdk 34
-          sed -i 's/compileSdkVersion.*/compileSdkVersion 34/g' android/app/build.gradle || true
-          sed -i 's/targetSdkVersion.*/targetSdkVersion 34/g' android/app/build.gradle || true
-          sed -i 's/compileSdk.*/compileSdk = 34/g' android/app/build.gradle || true
-          sed -i 's/compileSdk.*/compileSdk = 34/g' android/app/build.gradle || true
       - run: flutter clean
       - run: flutter pub get
       - run: flutter build apk --release --no-tree-shake-icons
